@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AzarLab — El laboratorio de los números</title>
+<style>
+:root{--bg:#f4f5f8;--card:#fff;--ink:#18202f;--muted:#697386;--accent:#6d28d9;--accent2:#ede9fe;--line:#e2e5ec}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:28px 24px 34px;background:linear-gradient(135deg,#302078,#4138a8);color:white}
+.brand{font-size:34px;font-weight:800}.tag{font-size:22px;margin-top:5px}.sub{font-size:16px;margin-top:14px;color:#ddd9f6}
+nav{display:flex;flex-wrap:wrap;gap:10px;padding:20px 24px;background:var(--bg)}
+nav button{border:0;border-radius:15px;padding:13px 18px;background:#e5e7eb;color:#111827;font-weight:700;font-size:16px}
+nav button.active{background:var(--accent);color:#fff}
+main{max-width:950px;margin:auto;padding:0 24px 40px}.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:24px;margin-bottom:16px;box-shadow:0 4px 18px #00000008}
+h1{font-size:36px;margin:0 0 20px}h2{margin-top:0;font-size:25px}h3{margin-bottom:8px}
+.notice{border-left:5px solid var(--accent);background:var(--accent2);padding:16px;border-radius:12px;margin:16px 0}
+.muted{color:var(--muted)}label{font-weight:700;display:block;margin-top:10px}
+input,select{width:100%;padding:13px;border:1px solid #cfd4df;border-radius:11px;background:white;font-size:16px;margin:7px 0 12px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}.primary,.secondary{border:0;border-radius:11px;padding:12px 17px;font-weight:700;font-size:15px}
+.primary{background:var(--accent);color:#fff}.secondary{background:#e5e7eb;color:#111827}
+.result{margin-top:14px;padding:14px;border-radius:12px;background:#f3f4f6;min-height:20px}
+.num{font-size:25px;font-weight:800;letter-spacing:2px}
+table{width:100%;border-collapse:collapse;margin-top:12px}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left}
+footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">🎲 AZARLAB</div>
+  <div class="tag">El laboratorio de los números</div>
+  <div class="sub">Analizá · Experimentá · Poné las hipótesis a prueba</div>
+</header>
+
+<nav>
+  <button data-page="inicio" class="active">🏠 Inicio</button>
+  <button data-page="jugada">🎯 Mi jugada</button>
+  <button data-page="resultados">📊 Resultados</button>
+  <button data-page="analizar">🔬 Analizar</button>
+  <button data-page="historial">📚 Historial</button>
+  <button data-page="laboratorio">🧪 Laboratorio</button>
+</nav>
+
+<main>
+<section id="inicio" class="panel active">
+  <div class="card">
+    <h1>Bienvenido a AzarLab</h1>
+    <p>Una plataforma experimental para estudiar jugadas, resultados y posibles estructuras en juegos de azar.</p>
+    <div class="notice"><strong>Principio:</strong> una combinación generada es una hipótesis, no una promesa de acierto. Cada hipótesis puede compararse con el resultado real.</div>
+    <h2>🎱 Quini 6</h2><p class="muted">Tradicional · La Segunda · Revancha · Siempre Sale</p>
+    <h2>🍀 Loto</h2><p class="muted">Módulo configurable para futuras pruebas.</p>
+    <h2>🔢 Quiniela</h2><p class="muted">Análisis de 1, 2, 3 y 4 cifras, preservando los ceros iniciales.</p>
+  </div>
+</section>
+
+<section id="jugada" class="panel">
+  <div class="card">
+    <h1>🎯 Mi jugada</h1>
+    <p class="muted">Guardá tu combinación en este dispositivo. En esta etapa de prueba no se envía a una base central.</p>
+    <label>Juego</label><select id="playGame"><option>Quini 6</option><option>Loto</option><option>Quiniela</option></select>
+    <label>Combinación</label><input id="playNumbers" placeholder="Ej.: 02 10 24 25 30 37">
+    <div class="actions"><button class="primary" onclick="savePlay()">Guardar jugada</button><button class="secondary" onclick="clearPlay()">Borrar</button></div>
+    <div id="playResult" class="result"></div>
+  </div>
+</section>
+
+<section id="resultados" class="panel">
+  <div class="card">
+    <h1>📊 Resultados</h1>
+    <p class="muted">Cargá un resultado real. Queda guardado localmente para las pruebas.</p>
+    <label>Juego</label><select id="drawGame"><option>Quini 6</option><option>Loto</option><option>Quiniela</option></select>
+    <label>Modalidad</label><select id="drawMode"><option>Tradicional</option><option>La Segunda</option><option>Revancha</option><option>Siempre Sale</option></select>
+    <label>Resultado</label><input id="drawNumbers" placeholder="Ej.: 01 06 09 25 30 33">
+    <div class="actions"><button class="primary" onclick="saveDraw()">Guardar resultado</button></div>
+    <div id="drawResult" class="result"></div>
+  </div>
+</section>
+
+<section id="analizar" class="panel">
+  <div class="card">
+    <h1>🔬 Analizar</h1>
+    <p class="muted">Primera capa del análisis: estructura básica de una combinación.</p>
+    <input id="anNumbers" placeholder="Ej.: 02 10 24 25 30 37">
+    <button class="primary" onclick="analyze()">Analizar combinación</button>
+    <div id="analysisResult" class="result"></div>
+  </div>
+</section>
+
+<section id="historial" class="panel">
+  <div class="card">
+    <h1>📚 Historial</h1>
+    <p class="muted">Registro de prueba almacenado en este navegador.</p>
+    <div id="history"></div>
+    <button class="secondary" onclick="clearHistory()">Borrar historial local</button>
+  </div>
+</section>
+
+<section id="laboratorio" class="panel">
+  <div class="card">
+    <h1>🧪 Laboratorio</h1>
+    <p>Generá una combinación experimental para Quini 6. Esta función es solamente una hipótesis de prueba.</p>
+    <button class="primary" onclick="generate()">Generar hipótesis</button>
+    <div id="hyp" class="result num"></div>
+  </div>
+  <div class="card">
+    <h2>Modelo</h2>
+    <p class="muted">En esta versión pública estamos probando la interfaz. El verdadero motor Método Fer se incorporará después de validar la estructura y el registro de datos.</p>
+  </div>
+</section>
+</main>
+
+<footer>AzarLab · El laboratorio de los números<br>Sin apuestas ni manejo de dinero.</footer>
+
+<script>
+const KEY='azarlab_data_v2';
+function data(){return JSON.parse(localStorage.getItem(KEY)||'{"plays":[],"draws":[]}')}
+function saveData(d){localStorage.setItem(KEY,JSON.stringify(d))}
+function parseNums(s){return s.trim().split(/[\s,;-]+/).filter(Boolean)}
+function qNums(s){
+  return [...new Set(parseNums(s).map(x=>String(parseInt(x,10)).padStart(2,'0')))].sort((a,b)=>Number(a)-Number(b))
+}
+function go(page){
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  document.getElementById(page).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
+  if(page==='historial')renderHistory();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
+
+function savePlay(){
+  const d=data(), game=document.getElementById('playGame').value, raw=document.getElementById('playNumbers').value;
+  if(!raw.trim()){document.getElementById('playResult').textContent='Ingresá una combinación.';return}
+  const nums=game==='Quini 6'?qNums(raw):parseNums(raw);
+  d.plays.unshift({date:new Date().toLocaleString('es-AR'),game,nums});saveData(d);
+  document.getElementById('playResult').textContent='Jugada guardada: '+nums.join(' - ');
+}
+function clearPlay(){document.getElementById('playNumbers').value='';document.getElementById('playResult').textContent=''}
+function saveDraw(){
+  const d=data(), game=document.getElementById('drawGame').value, mode=document.getElementById('drawMode').value, raw=document.getElementById('drawNumbers').value;
+  if(!raw.trim()){document.getElementById('drawResult').textContent='Ingresá el resultado.';return}
+  const nums=game==='Quini 6'?qNums(raw):parseNums(raw);
+  d.draws.unshift({date:new Date().toLocaleString('es-AR'),game,mode,nums});saveData(d);
+  document.getElementById('drawResult').textContent='Resultado guardado: '+nums.join(' - ');
+}
+function analyze(){
+  const a=qNums(document.getElementById('anNumbers').value);
+  if(!a.length){document.getElementById('analysisResult').textContent='Ingresá una combinación.';return}
+  const sum=a.reduce((s,n)=>s+Number(n),0), ev=a.filter(n=>Number(n)%2===0).length;
+  const decades={};
+  a.forEach(n=>{const d=Math.floor(Number(n)/10);decades[d]=(decades[d]||0)+1});
+  document.getElementById('analysisResult').innerHTML='<b>Números:</b> '+a.join(' - ')+'<br><b>Suma:</b> '+sum+'<br><b>Pares:</b> '+ev+' · <b>Impares:</b> '+(a.length-ev)+'<br><b>Decenas:</b> '+Object.entries(decades).map(([k,v])=>k+'x: '+v).join(' · ');
+}
+function generate(){
+  const s=new Set();while(s.size<6)s.add(Math.floor(Math.random()*46));
+  const a=[...s].sort((x,y)=>x-y).map(x=>String(x).padStart(2,'0'));
+  document.getElementById('hyp').textContent=a.join(' - ');
+}
+function renderHistory(){
+  const d=data(), box=document.getElementById('history');
+  if(!d.plays.length&&!d.draws.length){box.innerHTML='<p class="muted">Todavía no hay registros.</p>';return}
+  let html='';
+  d.plays.forEach(x=>html+='<p>🎯 <b>Jugada</b> · '+x.game+' · '+x.nums.join(' - ')+' · '+x.date+'</p>');
+  d.draws.forEach(x=>html+='<p>📊 <b>Resultado</b> · '+x.game+' · '+x.mode+' · '+x.nums.join(' - ')+' · '+x.date+'</p>');
+  box.innerHTML=html;
+}
+function clearHistory(){if(confirm('¿Borrar el historial local?')){localStorage.removeItem(KEY);renderHistory()}}
+</script>
+</body>
+</html>
