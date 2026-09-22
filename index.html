@@ -45,15 +45,42 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
 <main>
 <section id="inicio" class="panel active">
   <div class="card">
-    <h1>Bienvenido a AzarLab</h1>
-    <p>Una plataforma experimental para estudiar jugadas, resultados y posibles estructuras en juegos de azar.</p>
-    <div class="notice"><strong>Principio:</strong> una combinación generada es una hipótesis, no una promesa de acierto. Cada hipótesis puede compararse con el resultado real.</div>
-    <h2>🎱 Quini 6</h2><p class="muted">Tradicional · La Segunda · Revancha · Siempre Sale</p>
-    <h2>🍀 Loto</h2><p class="muted">Módulo configurable para futuras pruebas.</p>
-    <h2>🔢 Quiniela</h2><p class="muted">Análisis de 1, 2, 3 y 4 cifras, preservando los ceros iniciales.</p>
+    <h1>🎲 AzarLab</h1>
+    <p>El laboratorio de los números</p>
+
+    <div class="notice">
+      <strong>¿Qué juego querés analizar?</strong>
+    </div>
+
+    <div class="actions">
+      <button class="primary" onclick="go('quini')">🎯 QUINI 6</button>
+      <button class="primary" onclick="go('quiniela')">🔢 QUINIELA</button>
+    </div>
+  </div>
+</section>
+<section id="quini" class="panel">
+  <div class="card">
+    <h1>🎯 Quini 6</h1>
+    <p class="muted">Elegí qué querés hacer con Quini 6.</p>
+
+    <div class="actions">
+      <button class="primary">🎲 Generar posible jugada</button>
+      <button onclick="go('inicio')">← Volver</button>
+    </div>
   </div>
 </section>
 
+<section id="quiniela" class="panel">
+  <div class="card">
+    <h1>🔢 Quiniela</h1>
+    <p class="muted">Elegí la jurisdicción y el tipo de jugada.</p>
+
+    <div class="actions">
+      <button class="primary">🎲 Generar posible jugada</button>
+      <button onclick="go('inicio')">← Volver</button>
+    </div>
+  </div>
+</section>
 <section id="jugada" class="panel">
   <div class="card">
     <h1>🎯 Mi jugada</h1>
