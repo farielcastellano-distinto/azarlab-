@@ -194,6 +194,41 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
 function mostrarIngresoJugada() {
   document.getElementById("ingresoJugada").style.display = "block";
 }
+  function guardarMiJugada() {
+  const numeros = [];
+
+  for (let i = 1; i <= 6; i++) {
+    const valor = document.getElementById("j" + i).value;
+
+    if (valor === "") {
+      alert("Completá los 6 números.");
+      return;
+    }
+
+    const numero = Number(valor);
+
+    if (numero < 0 || numero > 45) {
+      alert("Los números deben estar entre 00 y 45.");
+      return;
+    }
+
+    if (numeros.includes(numero)) {
+      alert("No podés repetir un número.");
+      return;
+    }
+
+    numeros.push(numero);
+  }
+
+  numeros.sort((a, b) => a - b);
+
+  const jugada = numeros
+    .map(n => String(n).padStart(2, "0"))
+    .join(" - ");
+
+  document.getElementById("quiniGenerado").textContent =
+    "Mi jugada: " + jugada;
+}
     </script>
 <script>
 const KEY='azarlab_data_v2';
