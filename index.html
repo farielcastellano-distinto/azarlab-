@@ -67,9 +67,26 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
 </button>
 <div id="quiniGenerado" class="result num"></div>
 
-      <button class="primary">
-        ✏️ Ingresar mi jugada
-      </button>
+      <button class="primary" onclick="mostrarIngresoJugada()">
+  ✏️ Ingresar mi jugada
+</button>
+
+<div id="ingresoJugada" class="result" style="display:none;">
+  <p><strong>Ingresá los 6 números de tu jugada</strong></p>
+
+  <div class="actions">
+    <input id="j1" type="number" min="0" max="45" placeholder="00">
+    <input id="j2" type="number" min="0" max="45" placeholder="00">
+    <input id="j3" type="number" min="0" max="45" placeholder="00">
+    <input id="j4" type="number" min="0" max="45" placeholder="00">
+    <input id="j5" type="number" min="0" max="45" placeholder="00">
+    <input id="j6" type="number" min="0" max="45" placeholder="00">
+  </div>
+
+  <button class="primary" onclick="guardarMiJugada()">
+    💾 Guardar mi jugada
+  </button>
+</div>
 
       <button class="primary">
         🎰 Ingresar resultado
