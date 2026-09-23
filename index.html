@@ -153,7 +153,29 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
 </main>
 
 <footer>AzarLab · El laboratorio de los números<br>Sin apuestas ni manejo de dinero.</footer>
+<script>
 
+  function generarQuini() {
+    const numeros = [];
+
+    while (numeros.length < 6) {
+      const n = Math.floor(Math.random() * 46);
+
+      if (!numeros.includes(n)) {
+        numeros.push(n);
+      }
+    }
+
+    numeros.sort((a, b) => a - b);
+
+    const jugada = numeros
+      .map(n => String(n).padStart(2, "0"))
+      .join(" - ");
+
+    document.getElementById("quiniGenerado").textContent = jugada;
+  }
+
+    </script>
 <script>
 const KEY='azarlab_data_v2';
 function data(){return JSON.parse(localStorage.getItem(KEY)||'{"plays":[],"draws":[]}')}
