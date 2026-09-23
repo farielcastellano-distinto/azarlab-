@@ -86,6 +86,7 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
   <button class="primary" onclick="guardarMiJugada()">
     💾 Guardar mi jugada
   </button>
+  <div id="miJugadaGuardada" class="result num"></div>
 </div>
 
       <button class="primary">
@@ -207,8 +208,8 @@ function mostrarIngresoJugada() {
 
     const numero = Number(valor);
 
-    if (numero < 0 || numero > 45) {
-      alert("Los números deben estar entre 00 y 45.");
+    if (!Number.isInteger(numero) || numero < 0 || numero > 45) {
+      alert("Los números deben ser enteros entre 00 y 45.");
       return;
     }
 
@@ -226,7 +227,17 @@ function mostrarIngresoJugada() {
     .map(n => String(n).padStart(2, "0"))
     .join(" - ");
 
-  document.getElementById("quiniGenerado").textContent =
+  const d = data();
+
+  d.plays.unshift({
+    date: new Date().toLocaleString("es-AR"),
+    game: "Quini 6",
+    nums: numeros.map(n => String(n).padStart(2, "0"))
+  });
+
+  saveData(d);
+
+  document.getElementById("miJugadaGuardada").textContent =
     "Mi jugada: " + jugada;
 }
     </script>
