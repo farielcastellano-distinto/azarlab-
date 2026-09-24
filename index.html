@@ -121,6 +121,8 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
     </div>
     <div id="analisisQuini" class="result hidden"></div>
 
+    <div id="hipotesisSiguiente" class="result hidden"></div>
+
     <div class="actions" style="margin-top:14px">
       <button onclick="go('inicio')">← Volver</button>
     </div>
@@ -325,7 +327,10 @@ function guardarResultado(){
 
 function analizarQuini(){
   const box = document.getElementById('analisisQuini');
+  const hypBox = document.getElementById('hipotesisSiguiente');
+
   box.classList.remove('hidden');
+  hypBox.classList.add('hidden');
 
   const d = data();
   const modalidades = ['Tradicional','La Segunda','Revancha','Siempre Sale'];
@@ -343,6 +348,8 @@ function analizarQuini(){
   }
 
   const j = jugada.nums.map(String);
+  const resultados = [];
+  let totalAciertos = 0;
 
   let htmlAnalisis =
     '<h3 style="margin-top:0">🔬 Análisis de las 4 modalidades</h3>' +
@@ -362,6 +369,8 @@ function analizarQuini(){
 
     const r = resultado.nums.map(String);
     const aciertos = j.filter(n => r.includes(n));
+    totalAciertos += aciertos.length;
+    resultados.push(r);
 
     htmlAnalisis +=
       '<br><b>Resultado:</b> ' + r.join(' - ') +
@@ -373,6 +382,37 @@ function analizarQuini(){
   });
 
   box.innerHTML = htmlAnalisis;
+
+  if(!resultados.length){
+    return;
+  }
+
+  // Hipótesis experimental: toma la frecuencia observada en las modalidades
+  // cargadas. No es una predicción ni forma parte todavía del Método Fer.
+  const frecuencia = {};
+  resultados.flat().forEach(n => {
+    frecuencia[n] = (frecuencia[n] || 0) + 1;
+  });
+
+  const candidatos = Object.keys(frecuencia)
+    .sort((a,b) => frecuencia[b] - frecuencia[a] || Number(a) - Number(b));
+
+  const seleccion = candidatos.slice(0,6);
+
+  // Si hay menos de 6 números distintos (caso teórico), completamos.
+  while(seleccion.length < 6){
+    const n = String(Math.floor(Math.random()*46)).padStart(2,'0');
+    if(!seleccion.includes(n)) seleccion.push(n);
+  }
+
+  seleccion.sort((a,b)=>Number(a)-Number(b));
+
+  hypBox.classList.remove('hidden');
+  hypBox.innerHTML =
+    '<h3 style="margin-top:0">🧪 Hipótesis experimental para la próxima jugada</h3>' +
+    '<p><b>' + seleccion.join(' - ') + '</b></p>' +
+    '<p class="small muted">Esta combinación surge únicamente de la frecuencia observada en los resultados cargados. No implica que esos números tengan mayor probabilidad de salir y todavía no corresponde al Método Fer.</p>' +
+    '<p class="small">Aciertos acumulados de la jugada actual en las modalidades cargadas: <b>' + totalAciertos + '</b>.</p>';
 }
 </script>
 
