@@ -93,7 +93,7 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
         🎰 Ingresar resultado
       </button>
 
-      <button class="primary">
+      <button class="primary" onclick="analizarQuini()">
         🔬 Analizar
       </button>
 
@@ -101,6 +101,8 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
         ← Volver
       </button>
     </div>
+
+    <div id="analisisQuini" class="result" style="display:none;"></div>
 
     <div id="ingresoResultado" class="result" style="display:none;">
       <p><strong>Ingresá el resultado del sorteo</strong></p>
@@ -266,6 +268,43 @@ function mostrarIngresoJugada() {
 }
     </script>
 <script>
+
+function analizarQuini() {
+  const d = data();
+  const box = document.getElementById("analisisQuini");
+  box.style.display = "block";
+
+  if (!d.plays.length) {
+    box.innerHTML = "<b>Sin jugada registrada.</b><br>Primero ingresá y guardá tu jugada.";
+    return;
+  }
+
+  if (!d.draws.length) {
+    box.innerHTML = "<b>Sin resultado registrado.</b><br>Primero ingresá y guardá un resultado.";
+    return;
+  }
+
+  const jugada = d.plays[0];
+  const resultado = d.draws[0];
+
+  if (jugada.game !== "Quini 6" || resultado.game !== "Quini 6") {
+    box.innerHTML = "<b>No hay datos de Quini 6 suficientes para analizar.</b>";
+    return;
+  }
+
+  const j = jugada.nums.map(String);
+  const r = resultado.nums.map(String);
+  const aciertos = j.filter(n => r.includes(n));
+
+  box.innerHTML =
+    "<b>Mi jugada:</b> " + j.join(" - ") +
+    "<br><b>Resultado (" + resultado.mode + "):</b> " + r.join(" - ") +
+    "<br><br><b>Aciertos: " + aciertos.length + "</b>" +
+    (aciertos.length
+      ? "<br><b>Números acertados:</b> " + aciertos.join(" - ")
+      : "<br><b>Números acertados:</b> ninguno");
+}
+
 const KEY='azarlab_data_v2';
 function data(){return JSON.parse(localStorage.getItem(KEY)||'{"plays":[],"draws":[]}')}
 function saveData(d){localStorage.setItem(KEY,JSON.stringify(d))}
@@ -344,269 +383,6 @@ function guardarResultadoQuini() {
   document.getElementById("resultadoGuardado").textContent = modalidad + ": " + resultado;
 }
 
-</script>
-</body>
-</html>  <button data-page="inicio" class="active">🏠 Inicio</button>
-</nav>
-
-<main>
-<section id="inicio" class="panel active">
-  <div class="card">
-    <h1>🎲 AzarLab</h1>
-    <p>El laboratorio de los números</p>
-
-    <div class="notice">
-      <strong>¿Qué juego querés analizar?</strong>
-    </div>
-
-    <div class="actions">
-      <button class="primary" onclick="go('quini')">🎯 QUINI 6</button>
-      <button class="primary" onclick="go('quiniela')">🔢 QUINIELA</button>
-    </div>
-  </div>
-</section>
-<section id="quini" class="panel">
-  <div class="card">
-    <h1>🎯 Quini 6</h1>
-
-    <div class="notice">
-      <strong>¿Qué querés hacer?</strong>
-    </div>
-
-    <div class="actions">
-      <button class="primary" onclick="generarQuini()">
-  🎲 Generar posible jugada
-</button>
-<div id="quiniGenerado" class="result num"></div>
-
-      <button class="primary" onclick="mostrarIngresoJugada()">
-  ✏️ Ingresar mi jugada
-</button>
-
-<div id="ingresoJugada" class="result" style="display:none;">
-  <p><strong>Ingresá los 6 números de tu jugada</strong></p>
-
-  <div class="actions">
-    <input id="j1" type="number" min="0" max="45" placeholder="00">
-    <input id="j2" type="number" min="0" max="45" placeholder="00">
-    <input id="j3" type="number" min="0" max="45" placeholder="00">
-    <input id="j4" type="number" min="0" max="45" placeholder="00">
-    <input id="j5" type="number" min="0" max="45" placeholder="00">
-    <input id="j6" type="number" min="0" max="45" placeholder="00">
-  </div>
-
-  <button class="primary" onclick="guardarMiJugada()">
-    💾 Guardar mi jugada
-  </button>
-  <div id="miJugadaGuardada" class="result num"></div>
-</div>
-
-      <button class="primary">
-        🎰 Ingresar resultado
-      </button>
-
-      <button class="primary">
-        🔬 Analizar
-      </button>
-
-      <button onclick="go('inicio')">
-        ← Volver
-      </button>
-    </div>
-  </div>
-</section>
-<section id="quiniela" class="panel">
-  <div class="card">
-    <h1>🔢 Quiniela</h1>
-    <p class="muted">Elegí la jurisdicción y el tipo de jugada.</p>
-
-    <div class="actions">
-      <button class="primary">🎲 Generar posible jugada</button>
-      <button onclick="go('inicio')">← Volver</button>
-    </div>
-  </div>
-</section>
-<section id="jugada" class="panel">
-  <div class="card">
-    <h1>🎯 Mi jugada</h1>
-    <p class="muted">Guardá tu combinación en este dispositivo. En esta etapa de prueba no se envía a una base central.</p>
-    <label>Juego</label><select id="playGame"><option>Quini 6</option><option>Loto</option><option>Quiniela</option></select>
-    <label>Combinación</label><input id="playNumbers" placeholder="Ej.: 02 10 24 25 30 37">
-    <div class="actions"><button class="primary" onclick="savePlay()">Guardar jugada</button><button class="secondary" onclick="clearPlay()">Borrar</button></div>
-    <div id="playResult" class="result"></div>
-  </div>
-</section>
-
-<section id="resultados" class="panel">
-  <div class="card">
-    <h1>📊 Resultados</h1>
-    <p class="muted">Cargá un resultado real. Queda guardado localmente para las pruebas.</p>
-    <label>Juego</label><select id="drawGame"><option>Quini 6</option><option>Loto</option><option>Quiniela</option></select>
-    <label>Modalidad</label><select id="drawMode"><option>Tradicional</option><option>La Segunda</option><option>Revancha</option><option>Siempre Sale</option></select>
-    <label>Resultado</label><input id="drawNumbers" placeholder="Ej.: 01 06 09 25 30 33">
-    <div class="actions"><button class="primary" onclick="saveDraw()">Guardar resultado</button></div>
-    <div id="drawResult" class="result"></div>
-  </div>
-</section>
-
-<section id="analizar" class="panel">
-  <div class="card">
-    <h1>🔬 Analizar</h1>
-    <p class="muted">Primera capa del análisis: estructura básica de una combinación.</p>
-    <input id="anNumbers" placeholder="Ej.: 02 10 24 25 30 37">
-    <button class="primary" onclick="analyze()">Analizar combinación</button>
-    <div id="analysisResult" class="result"></div>
-  </div>
-</section>
-
-<section id="historial" class="panel">
-  <div class="card">
-    <h1>📚 Historial</h1>
-    <p class="muted">Registro de prueba almacenado en este navegador.</p>
-    <div id="history"></div>
-    <button class="secondary" onclick="clearHistory()">Borrar historial local</button>
-  </div>
-</section>
-
-<section id="laboratorio" class="panel">
-  <div class="card">
-    <h1>🧪 Laboratorio</h1>
-    <p>Generá una combinación experimental para Quini 6. Esta función es solamente una hipótesis de prueba.</p>
-    <button class="primary" onclick="generate()">Generar hipótesis</button>
-    <div id="hyp" class="result num"></div>
-  </div>
-  <div class="card">
-    <h2>Modelo</h2>
-    <p class="muted">En esta versión pública estamos probando la interfaz. El verdadero motor Método Fer se incorporará después de validar la estructura y el registro de datos.</p>
-  </div>
-</section>
-</main>
-
-<footer>AzarLab · El laboratorio de los números<br>Sin apuestas ni manejo de dinero.</footer>
-<script>
-
-  function generarQuini() {
-    const numeros = [];
-
-    while (numeros.length < 6) {
-      const n = Math.floor(Math.random() * 46);
-
-      if (!numeros.includes(n)) {
-        numeros.push(n);
-      }
-    }
-
-    numeros.sort((a, b) => a - b);
-
-    const jugada = numeros
-      .map(n => String(n).padStart(2, "0"))
-      .join(" - ");
-
-    document.getElementById("quiniGenerado").textContent = jugada;
-  }
-function mostrarIngresoJugada() {
-  document.getElementById("ingresoJugada").style.display = "block";
-}
-  function guardarMiJugada() {
-  const numeros = [];
-
-  for (let i = 1; i <= 6; i++) {
-    const valor = document.getElementById("j" + i).value;
-
-    if (valor === "") {
-      alert("Completá los 6 números.");
-      return;
-    }
-
-    const numero = Number(valor);
-
-    if (!Number.isInteger(numero) || numero < 0 || numero > 45) {
-      alert("Los números deben ser enteros entre 00 y 45.");
-      return;
-    }
-
-    if (numeros.includes(numero)) {
-      alert("No podés repetir un número.");
-      return;
-    }
-
-    numeros.push(numero);
-  }
-
-  numeros.sort((a, b) => a - b);
-
-  const jugada = numeros
-    .map(n => String(n).padStart(2, "0"))
-    .join(" - ");
-
-  const d = data();
-
-  d.plays.unshift({
-    date: new Date().toLocaleString("es-AR"),
-    game: "Quini 6",
-    nums: numeros.map(n => String(n).padStart(2, "0"))
-  });
-
-  saveData(d);
-
-  document.getElementById("miJugadaGuardada").textContent =
-    "Mi jugada: " + jugada;
-}
-    </script>
-<script>
-const KEY='azarlab_data_v2';
-function data(){return JSON.parse(localStorage.getItem(KEY)||'{"plays":[],"draws":[]}')}
-function saveData(d){localStorage.setItem(KEY,JSON.stringify(d))}
-function parseNums(s){return s.trim().split(/[\s,;-]+/).filter(Boolean)}
-function qNums(s){
-  return [...new Set(parseNums(s).map(x=>String(parseInt(x,10)).padStart(2,'0')))].sort((a,b)=>Number(a)-Number(b))
-}
-function go(page){
-  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
-  document.getElementById(page).classList.add('active');
-  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
-  if(page==='historial')renderHistory();
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
-
-function savePlay(){
-  const d=data(), game=document.getElementById('playGame').value, raw=document.getElementById('playNumbers').value;
-  if(!raw.trim()){document.getElementById('playResult').textContent='Ingresá una combinación.';return}
-  const nums=game==='Quini 6'?qNums(raw):parseNums(raw);
-  d.plays.unshift({date:new Date().toLocaleString('es-AR'),game,nums});saveData(d);
-  document.getElementById('playResult').textContent='Jugada guardada: '+nums.join(' - ');
-}
-function clearPlay(){document.getElementById('playNumbers').value='';document.getElementById('playResult').textContent=''}
-function saveDraw(){
-  const d=data(), game=document.getElementById('drawGame').value, mode=document.getElementById('drawMode').value, raw=document.getElementById('drawNumbers').value;
-  if(!raw.trim()){document.getElementById('drawResult').textContent='Ingresá el resultado.';return}
-  const nums=game==='Quini 6'?qNums(raw):parseNums(raw);
-  d.draws.unshift({date:new Date().toLocaleString('es-AR'),game,mode,nums});saveData(d);
-  document.getElementById('drawResult').textContent='Resultado guardado: '+nums.join(' - ');
-}
-function analyze(){
-  const a=qNums(document.getElementById('anNumbers').value);
-  if(!a.length){document.getElementById('analysisResult').textContent='Ingresá una combinación.';return}
-  const sum=a.reduce((s,n)=>s+Number(n),0), ev=a.filter(n=>Number(n)%2===0).length;
-  const decades={};
-  a.forEach(n=>{const d=Math.floor(Number(n)/10);decades[d]=(decades[d]||0)+1});
-  document.getElementById('analysisResult').innerHTML='<b>Números:</b> '+a.join(' - ')+'<br><b>Suma:</b> '+sum+'<br><b>Pares:</b> '+ev+' · <b>Impares:</b> '+(a.length-ev)+'<br><b>Decenas:</b> '+Object.entries(decades).map(([k,v])=>k+'x: '+v).join(' · ');
-}
-function generate(){
-  const s=new Set();while(s.size<6)s.add(Math.floor(Math.random()*46));
-  const a=[...s].sort((x,y)=>x-y).map(x=>String(x).padStart(2,'0'));
-  document.getElementById('hyp').textContent=a.join(' - ');
-}
-function renderHistory(){
-  const d=data(), box=document.getElementById('history');
-  if(!d.plays.length&&!d.draws.length){box.innerHTML='<p class="muted">Todavía no hay registros.</p>';return}
-  let html='';
-  d.plays.forEach(x=>html+='<p>🎯 <b>Jugada</b> · '+x.game+' · '+x.nums.join(' - ')+' · '+x.date+'</p>');
-  d.draws.forEach(x=>html+='<p>📊 <b>Resultado</b> · '+x.game+' · '+x.mode+' · '+x.nums.join(' - ')+' · '+x.date+'</p>');
-  box.innerHTML=html;
-}
-function clearHistory(){if(confirm('¿Borrar el historial local?')){localStorage.removeItem(KEY);renderHistory()}}
 </script>
 </body>
 </html>
