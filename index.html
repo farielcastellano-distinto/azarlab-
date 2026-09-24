@@ -345,7 +345,7 @@ function analizarQuini(){
   const j = jugada.nums.map(String);
 
   let htmlAnalisis =
-    '<h3 style="margin-top:0">🔬 Análisis de las modalidades</h3>' +
+    '<h3 style="margin-top:0">🔬 Análisis de las 4 modalidades</h3>' +
     '<p><b>Mi jugada:</b> ' + j.join(' - ') + '</p>';
 
   modalidades.forEach(modalidad => {
@@ -353,7 +353,7 @@ function analizarQuini(){
 
     htmlAnalisis +=
       '<div style="margin-top:14px;padding:14px;background:white;border:1px solid #e2e5ec;border-radius:12px">' +
-      '<b>🎰 ' + modalidad + '</b>';
+      '<div style="font-size:18px"><b>🎰 ' + modalidad + '</b></div>';
 
     if(!resultado){
       htmlAnalisis += '<br><span class="muted">Sin resultado guardado.</span></div>';
