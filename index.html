@@ -91,7 +91,7 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
     <div id="ingresoResultado" class="result hidden">
       <p><strong>Ingresá el resultado del sorteo</strong></p>
       <label for="modalidad">Modalidad</label>
-      <select id="modalidad">
+      <select id="modalidad" onchange="cargarResultadoModalidad()">
         <option>Tradicional</option>
         <option>La Segunda</option>
         <option>Revancha</option>
@@ -108,6 +108,7 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
       </div>
       <button class="primary" onclick="guardarResultado()">💾 Guardar resultado</button>
       <div id="resultadoGuardado" class="result"></div>
+      <div id="resultadoGuardadoInfo" class="small muted"></div>
     </div>
 
     <div class="actions" style="margin-top:14px">
@@ -222,7 +223,35 @@ function guardarMiJugada(){
 
 function mostrarIngresoResultado(){
   document.getElementById('ingresoResultado').classList.remove('hidden');
+  cargarResultadoModalidad();
   document.getElementById('ingresoResultado').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function cargarResultadoModalidad(){
+  const modalidad = document.getElementById('modalidad').value;
+  const box = document.getElementById('resultadoGuardado');
+  const info = document.getElementById('resultadoGuardadoInfo');
+  const d = data();
+
+  const encontrado = d.draws.find(x =>
+    x.game === 'Quini 6' && x.mode === modalidad
+  );
+
+  if(!encontrado){
+    for(let i=1;i<=6;i++){
+      document.getElementById('r'+i).value = '';
+    }
+    box.textContent = 'Todavía no hay un resultado guardado para ' + modalidad + '.';
+    info.textContent = '';
+    return;
+  }
+
+  encontrado.nums.forEach((n,i)=>{
+    document.getElementById('r'+(i+1)).value = Number(n);
+  });
+
+  box.innerHTML = '<b>' + modalidad + ':</b> ' + encontrado.nums.join(' - ');
+  info.textContent = 'Guardado: ' + encontrado.date;
 }
 
 function guardarResultado(){
@@ -238,15 +267,29 @@ function guardarResultado(){
   const resultado = formatear(lectura.numeros);
   const d = data();
 
-  d.draws.unshift({
+  const registro = {
     date:new Date().toLocaleString('es-AR'),
     game:'Quini 6',
     mode:modalidad,
     nums:lectura.numeros.map(n=>String(n).padStart(2,'0'))
-  });
+  };
+
+  // Para cada modalidad conservamos un solo resultado actual.
+  // Si se vuelve a guardar esa modalidad, se actualiza solamente esa modalidad.
+  const indice = d.draws.findIndex(x =>
+    x.game === 'Quini 6' && x.mode === modalidad
+  );
+
+  if(indice >= 0){
+    d.draws[indice] = registro;
+  }else{
+    d.draws.unshift(registro);
+  }
 
   saveData(d);
   box.innerHTML = '<b>' + modalidad + ':</b> ' + resultado;
+  document.getElementById('resultadoGuardadoInfo').textContent =
+    'Guardado correctamente para esta modalidad.';
 }
 
 function analizarQuini(){
@@ -266,10 +309,13 @@ function analizarQuini(){
   }
 
   const jugada = d.plays[0];
-  const resultado = d.draws[0];
+  const modalidad = document.getElementById('modalidad').value;
+  const resultado = d.draws.find(x =>
+    x.game === 'Quini 6' && x.mode === modalidad
+  );
 
-  if(jugada.game !== 'Quini 6' || resultado.game !== 'Quini 6'){
-    box.innerHTML = '<b>No hay datos de Quini 6 suficientes para analizar.</b>';
+  if(jugada.game !== 'Quini 6' || !resultado){
+    box.innerHTML = '<b>No hay un resultado guardado para ' + modalidad + '.</b>';
     return;
   }
 
