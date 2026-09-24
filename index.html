@@ -109,6 +109,11 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
       <button class="primary" onclick="guardarResultado()">💾 Guardar resultado</button>
       <div id="resultadoGuardado" class="result"></div>
       <div id="resultadoGuardadoInfo" class="small muted"></div>
+
+      <div id="registroModalidades" class="result" style="margin-top:16px">
+        <b>📋 Resultados guardados por modalidad</b>
+        <div id="listaModalidades" style="margin-top:10px"></div>
+      </div>
     </div>
 
     <div class="actions" style="margin-top:14px">
@@ -223,8 +228,34 @@ function guardarMiJugada(){
 
 function mostrarIngresoResultado(){
   document.getElementById('ingresoResultado').classList.remove('hidden');
+  mostrarRegistroModalidades();
   cargarResultadoModalidad();
   document.getElementById('ingresoResultado').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function obtenerResultadoModalidad(d, modalidad){
+  const encontrados = d.draws.filter(x =>
+    x.game === 'Quini 6' && x.mode === modalidad
+  );
+  return encontrados.length ? encontrados[0] : null;
+}
+
+function mostrarRegistroModalidades(){
+  const d = data();
+  const lista = document.getElementById('listaModalidades');
+  const modalidades = ['Tradicional','La Segunda','Revancha','Siempre Sale'];
+
+  lista.innerHTML = modalidades.map(modalidad => {
+    const r = obtenerResultadoModalidad(d, modalidad);
+
+    if(!r){
+      return '<div style="padding:7px 0;border-bottom:1px solid #e2e5ec"><b>' +
+        modalidad + ':</b> <span class="muted">sin resultado guardado</span></div>';
+    }
+
+    return '<div style="padding:7px 0;border-bottom:1px solid #e2e5ec"><b>' +
+      modalidad + ':</b> ' + r.nums.join(' - ') + '</div>';
+  }).join('');
 }
 
 function cargarResultadoModalidad(){
@@ -233,16 +264,15 @@ function cargarResultadoModalidad(){
   const info = document.getElementById('resultadoGuardadoInfo');
   const d = data();
 
-  const encontrado = d.draws.find(x =>
-    x.game === 'Quini 6' && x.mode === modalidad
-  );
+  const encontrado = obtenerResultadoModalidad(d, modalidad);
 
   if(!encontrado){
     for(let i=1;i<=6;i++){
       document.getElementById('r'+i).value = '';
     }
-    box.textContent = 'Todavía no hay un resultado guardado para ' + modalidad + '.';
+    box.innerHTML = '<b>' + modalidad + ':</b> todavía no hay un resultado guardado.';
     info.textContent = '';
+    mostrarRegistroModalidades();
     return;
   }
 
@@ -251,7 +281,8 @@ function cargarResultadoModalidad(){
   });
 
   box.innerHTML = '<b>' + modalidad + ':</b> ' + encontrado.nums.join(' - ');
-  info.textContent = 'Guardado: ' + encontrado.date;
+  info.textContent = 'Resultado guardado para ' + modalidad + '.';
+  mostrarRegistroModalidades();
 }
 
 function guardarResultado(){
@@ -276,20 +307,20 @@ function guardarResultado(){
 
   // Para cada modalidad conservamos un solo resultado actual.
   // Si se vuelve a guardar esa modalidad, se actualiza solamente esa modalidad.
-  const indice = d.draws.findIndex(x =>
-    x.game === 'Quini 6' && x.mode === modalidad
+  // El resultado guardado pertenece exclusivamente a la modalidad seleccionada.
+  // Si ya existía, se actualiza esa modalidad; las otras tres quedan intactas.
+  d.draws = d.draws.filter(x =>
+    !(x.game === 'Quini 6' && x.mode === modalidad)
   );
-
-  if(indice >= 0){
-    d.draws[indice] = registro;
-  }else{
-    d.draws.unshift(registro);
-  }
+  d.draws.unshift(registro);
 
   saveData(d);
+
   box.innerHTML = '<b>' + modalidad + ':</b> ' + resultado;
   document.getElementById('resultadoGuardadoInfo').textContent =
-    'Guardado correctamente para esta modalidad.';
+    'Guardado correctamente para ' + modalidad + '.';
+
+  mostrarRegistroModalidades();
 }
 
 function analizarQuini(){
@@ -310,9 +341,7 @@ function analizarQuini(){
 
   const jugada = d.plays[0];
   const modalidad = document.getElementById('modalidad').value;
-  const resultado = d.draws.find(x =>
-    x.game === 'Quini 6' && x.mode === modalidad
-  );
+  const resultado = obtenerResultadoModalidad(d, modalidad);
 
   if(jugada.game !== 'Quini 6' || !resultado){
     box.innerHTML = '<b>No hay un resultado guardado para ' + modalidad + '.</b>';
