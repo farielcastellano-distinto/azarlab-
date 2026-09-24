@@ -328,37 +328,51 @@ function analizarQuini(){
   box.classList.remove('hidden');
 
   const d = data();
+  const modalidades = ['Tradicional','La Segunda','Revancha','Siempre Sale'];
 
   if(!d.plays.length){
     box.innerHTML = '<b>Sin jugada registrada.</b><br>Primero ingresá y guardá tu jugada.';
     return;
   }
 
-  if(!d.draws.length){
-    box.innerHTML = '<b>Sin resultado registrado.</b><br>Primero ingresá y guardá un resultado.';
-    return;
-  }
-
   const jugada = d.plays[0];
-  const modalidad = document.getElementById('modalidad').value;
-  const resultado = obtenerResultadoModalidad(d, modalidad);
 
-  if(jugada.game !== 'Quini 6' || !resultado){
-    box.innerHTML = '<b>No hay un resultado guardado para ' + modalidad + '.</b>';
+  if(jugada.game !== 'Quini 6'){
+    box.innerHTML = '<b>No hay una jugada de Quini 6 registrada.</b>';
     return;
   }
 
   const j = jugada.nums.map(String);
-  const r = resultado.nums.map(String);
-  const aciertos = j.filter(n => r.includes(n));
 
-  box.innerHTML =
-    '<b>Mi jugada:</b> ' + j.join(' - ') +
-    '<br><b>Resultado (' + resultado.mode + '):</b> ' + r.join(' - ') +
-    '<br><br><b>Aciertos: ' + aciertos.length + '</b>' +
-    (aciertos.length
-      ? '<br><b>Números acertados:</b> ' + aciertos.join(' - ')
-      : '<br><b>Números acertados:</b> ninguno');
+  let htmlAnalisis =
+    '<h3 style="margin-top:0">🔬 Análisis de las modalidades</h3>' +
+    '<p><b>Mi jugada:</b> ' + j.join(' - ') + '</p>';
+
+  modalidades.forEach(modalidad => {
+    const resultado = obtenerResultadoModalidad(d, modalidad);
+
+    htmlAnalisis +=
+      '<div style="margin-top:14px;padding:14px;background:white;border:1px solid #e2e5ec;border-radius:12px">' +
+      '<b>🎰 ' + modalidad + '</b>';
+
+    if(!resultado){
+      htmlAnalisis += '<br><span class="muted">Sin resultado guardado.</span></div>';
+      return;
+    }
+
+    const r = resultado.nums.map(String);
+    const aciertos = j.filter(n => r.includes(n));
+
+    htmlAnalisis +=
+      '<br><b>Resultado:</b> ' + r.join(' - ') +
+      '<br><b>Aciertos:</b> ' + aciertos.length +
+      (aciertos.length
+        ? '<br><b>Números acertados:</b> ' + aciertos.join(' - ')
+        : '<br><b>Números acertados:</b> ninguno') +
+      '</div>';
+  });
+
+  box.innerHTML = htmlAnalisis;
 }
 </script>
 
