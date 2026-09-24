@@ -325,41 +325,55 @@ function guardarResultado(){
   mostrarRegistroModalidades();
 }
 
+function obtenerPozoExtra(d){
+  const tradicional = obtenerResultadoModalidad(d, 'Tradicional');
+  const revancha = obtenerResultadoModalidad(d, 'Revancha');
+
+  if(!tradicional || !revancha){
+    return null;
+  }
+
+  const unicos = [];
+  [...tradicional.nums, ...revancha.nums].map(String).forEach(n => {
+    if(!unicos.includes(n)) unicos.push(n);
+  });
+
+  unicos.sort((a,b)=>Number(a)-Number(b));
+
+  return unicos;
+}
+
 function analizarQuini(){
+  const d = data();
+  const jugadaGuardada = d.plays.find(x => x.game === 'Quini 6');
+
   const box = document.getElementById('analisisQuini');
   const hypBox = document.getElementById('hipotesisSiguiente');
 
   box.classList.remove('hidden');
   hypBox.classList.add('hidden');
 
-  const d = data();
+  if(!jugadaGuardada){
+    box.innerHTML = '<b>No hay una jugada guardada para analizar.</b>';
+    return;
+  }
+
+  const j = jugadaGuardada.nums.map(String);
   const modalidades = ['Tradicional','La Segunda','Revancha','Siempre Sale'];
-
-  if(!d.plays.length){
-    box.innerHTML = '<b>Sin jugada registrada.</b><br>Primero ingresá y guardá tu jugada.';
-    return;
-  }
-
-  const jugada = d.plays[0];
-
-  if(jugada.game !== 'Quini 6'){
-    box.innerHTML = '<b>No hay una jugada de Quini 6 registrada.</b>';
-    return;
-  }
-
-  const j = jugada.nums.map(String);
-  const resultados = [];
-  let totalAciertos = 0;
 
   let htmlAnalisis =
     '<h3 style="margin-top:0">🔬 Análisis de las 4 modalidades</h3>' +
     '<p><b>Mi jugada:</b> ' + j.join(' - ') + '</p>';
 
+  let totalAciertos = 0;
+  const resultados = [];
+
   modalidades.forEach(modalidad => {
     const resultado = obtenerResultadoModalidad(d, modalidad);
 
     htmlAnalisis +=
-      '<div style="margin-top:14px;padding:14px;background:white;border:1px solid #e2e5ec;border-radius:12px">' +
+      '<div style="margin-top:10px;padding:10px;background:#f7f8fa;' +
+      'border:1px solid #e2e5ec;border-radius:12px">' +
       '<div style="font-size:18px"><b>🎰 ' + modalidad + '</b></div>';
 
     if(!resultado){
@@ -381,14 +395,41 @@ function analizarQuini(){
       '</div>';
   });
 
+  // Pozo Extra: se obtiene a partir de Tradicional + Revancha.
+  const pozoExtra = obtenerPozoExtra(d);
+
+  htmlAnalisis +=
+    '<div style="margin-top:10px;padding:10px;background:#f7f8fa;' +
+    'border:1px solid #e2e5ec;border-radius:12px">' +
+    '<div style="font-size:18px"><b>💰 Pozo Extra</b></div>';
+
+  if(!pozoExtra){
+    htmlAnalisis +=
+      '<br><span class="muted">No disponible todavía. Para analizar Pozo Extra deben estar cargados Tradicional y Revancha.</span>';
+  }else{
+    const coincidenciasPozo = j.filter(n => pozoExtra.includes(n));
+
+    htmlAnalisis +=
+      '<br><b>Números que forman el Pozo Extra:</b> ' + pozoExtra.join(' - ') +
+      '<br><b>Coincidencias con mi jugada:</b> ' + coincidenciasPozo.length +
+      (coincidenciasPozo.length
+        ? '<br><b>Números coincidentes:</b> ' + coincidenciasPozo.join(' - ')
+        : '<br><b>Números coincidentes:</b> ninguno');
+  }
+
+  htmlAnalisis +=
+    '<div style="margin-top:12px;padding-top:10px;border-top:1px solid #e2e5ec">' +
+    '<b>Aciertos acumulados en las 4 modalidades:</b> ' + totalAciertos +
+    '</div></div>';
+
   box.innerHTML = htmlAnalisis;
 
   if(!resultados.length){
     return;
   }
 
-  // Hipótesis experimental: toma la frecuencia observada en las modalidades
-  // cargadas. No es una predicción ni forma parte todavía del Método Fer.
+  // Hipótesis experimental basada en la frecuencia observada.
+  // Pozo Extra no se suma nuevamente para evitar duplicar Tradicional y Revancha.
   const frecuencia = {};
   resultados.flat().forEach(n => {
     frecuencia[n] = (frecuencia[n] || 0) + 1;
@@ -399,7 +440,6 @@ function analizarQuini(){
 
   const seleccion = candidatos.slice(0,6);
 
-  // Si hay menos de 6 números distintos (caso teórico), completamos.
   while(seleccion.length < 6){
     const n = String(Math.floor(Math.random()*46)).padStart(2,'0');
     if(!seleccion.includes(n)) seleccion.push(n);
@@ -412,7 +452,7 @@ function analizarQuini(){
     '<h3 style="margin-top:0">🧪 Hipótesis experimental para la próxima jugada</h3>' +
     '<p><b>' + seleccion.join(' - ') + '</b></p>' +
     '<p class="small muted">Esta combinación surge únicamente de la frecuencia observada en los resultados cargados. No implica que esos números tengan mayor probabilidad de salir.</p>' +
-    '<p class="small">Aciertos acumulados de la jugada actual en las modalidades cargadas: <b>' + totalAciertos + '</b>.</p>';
+    '<p class="small">Aciertos acumulados de la jugada actual en las 4 modalidades: <b>' + totalAciertos + '</b>.</p>';
 }
 </script>
 
