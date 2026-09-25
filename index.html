@@ -1,460 +1,70 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AzarLab — El laboratorio de los números</title>
+<title>AzarLab — Quiniela</title>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
-:root{--bg:#f4f5f8;--card:#fff;--ink:#18202f;--muted:#697386;--accent:#6d28d9;--accent2:#ede9fe;--line:#e2e5ec}
-*{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
-header{padding:28px 24px 34px;background:linear-gradient(135deg,#302078,#4138a8);color:white}
-.brand{font-size:34px;font-weight:800}.tag{font-size:22px;margin-top:5px}.sub{font-size:16px;margin-top:14px;color:#ddd9f6}
-nav{display:flex;flex-wrap:wrap;gap:10px;padding:20px 24px;background:var(--bg)}
-nav button{border:0;border-radius:15px;padding:13px 18px;background:#e5e7eb;color:#111827;font-weight:700;font-size:16px}
-nav button.active{background:var(--accent);color:#fff}
-main{max-width:950px;margin:auto;padding:0 24px 40px}
-.panel{display:none}.panel.active{display:block}
-.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:24px;margin-bottom:16px;box-shadow:0 4px 18px #00000008}
-h1{font-size:36px;margin:0 0 20px}h2{margin-top:0;font-size:25px}
-.notice{border-left:5px solid var(--accent);background:var(--accent2);padding:16px;border-radius:12px;margin:16px 0}
-.muted{color:var(--muted)}label{font-weight:700;display:block;margin-top:10px}
-input,select{width:100%;padding:13px;border:1px solid #cfd4df;border-radius:11px;background:white;font-size:16px;margin:7px 0 12px}
-.actions{display:flex;gap:10px;flex-wrap:wrap}
-.primary,.secondary{border:0;border-radius:11px;padding:12px 17px;font-weight:700;font-size:15px;cursor:pointer}
-.primary{background:var(--accent);color:#fff}.secondary{background:#e5e7eb;color:#111827}
-.result{margin-top:14px;padding:14px;border-radius:12px;background:#f3f4f6;min-height:20px}
-.num{font-size:25px;font-weight:800;letter-spacing:2px}
-footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
-.hidden{display:none!important}
-.small{font-size:14px}
+body{font-family:Arial,sans-serif;background:#f4f6f8;margin:0;color:#222}
+header{background:#111827;color:#fff;padding:22px;text-align:center}
+header h1{margin:0}.card{background:#fff;border-radius:14px;padding:22px;margin:20px auto;max-width:900px;box-shadow:0 3px 14px #0001}
+input[type=file]{width:100%;padding:10px;box-sizing:border-box}button{padding:12px 18px;border:0;border-radius:9px;margin-top:12px;cursor:pointer}.primary{background:#111827;color:#fff}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.item{display:flex;gap:6px;align-items:center}.item label{width:25px;font-weight:bold}.item input{width:100%;padding:9px;font-size:16px}
+.status{margin-top:12px;padding:11px;border-radius:8px;background:#f3f4f6}.ok{background:#ecfdf5;color:#065f46}.warn{background:#fff7ed;color:#9a3412}
+.preview{max-width:100%;max-height:360px;margin-top:15px;display:none}
+.note{color:#555;font-size:14px;line-height:1.5}
 </style>
 </head>
 <body>
+<header><h1>AzarLab</h1><div>El laboratorio de los números</div></header>
 
-<header>
-  <div class="brand">🎲 AZARLAB</div>
-  <div class="tag">El laboratorio de los números</div>
-  <div class="sub">Analizá · Experimentá · Poné las hipótesis a prueba</div>
-</header>
+<div class="card">
+<h2>🔢 Quiniela — Cargar resultado</h2>
+<p>Subí una imagen del resultado. AzarLab intentará detectar los 20 números de cuatro cifras y colocarlos en sus posiciones.</p>
+<input id="imagen" type="file" accept="image/*">
+<img id="preview" class="preview">
+<button id="leer" class="primary" disabled>📷 Leer imagen</button>
+<div id="estado" class="status">Esperando una imagen.</div>
+<p class="note">La lectura automática es experimental. Antes de guardar, revisá los 20 números. Los ceros iniciales se conservan, por ejemplo <b>0028</b>.</p>
+</div>
 
-<nav>
-  <button data-page="inicio" class="active" onclick="go('inicio')">🏠 Inicio</button>
-</nav>
-
-<main>
-
-<section id="inicio" class="panel active">
-  <div class="card">
-    <h1>🎲 AzarLab</h1>
-    <p>El laboratorio de los números</p>
-    <div class="notice"><strong>¿Qué juego querés analizar?</strong></div>
-    <div class="actions">
-      <button class="primary" onclick="go('quini')">🎯 QUINI 6</button>
-      <button class="primary" onclick="go('quiniela')">🔢 QUINIELA</button>
-    </div>
-  </div>
-</section>
-
-<section id="quini" class="panel">
-  <div class="card">
-    <h1>🎯 Quini 6</h1>
-    <div class="notice"><strong>¿Qué querés hacer?</strong></div>
-
-    <div class="actions">
-      <button class="primary" onclick="generarQuini()">🎲 Generar posible jugada</button>
-    </div>
-    <div id="quiniGenerado" class="result num"></div>
-
-    <div class="actions">
-      <button class="primary" onclick="mostrarIngresoJugada()">✏️ Ingresar mi jugada</button>
-    </div>
-
-    <div id="ingresoJugada" class="result hidden">
-      <p><strong>Ingresá los 6 números de tu jugada</strong></p>
-      <div class="actions">
-        <input id="j1" type="number" min="0" max="45" placeholder="00">
-        <input id="j2" type="number" min="0" max="45" placeholder="00">
-        <input id="j3" type="number" min="0" max="45" placeholder="00">
-        <input id="j4" type="number" min="0" max="45" placeholder="00">
-        <input id="j5" type="number" min="0" max="45" placeholder="00">
-        <input id="j6" type="number" min="0" max="45" placeholder="00">
-      </div>
-      <button class="primary" onclick="guardarMiJugada()">💾 Guardar mi jugada</button>
-      <div id="jugadaGuardada" class="result"></div>
-    </div>
-
-    <div class="actions" style="margin-top:14px">
-      <button class="primary" onclick="mostrarIngresoResultado()">🎰 Ingresar resultado</button>
-    </div>
-
-    <div id="ingresoResultado" class="result hidden">
-      <p><strong>Ingresá el resultado del sorteo</strong></p>
-      <label for="modalidad">Modalidad</label>
-      <select id="modalidad" onchange="cargarResultadoModalidad()">
-        <option>Tradicional</option>
-        <option>La Segunda</option>
-        <option>Revancha</option>
-        <option>Siempre Sale</option>
-      </select>
-      <label>Los 6 números</label>
-      <div class="actions">
-        <input id="r1" type="number" min="0" max="45" placeholder="00">
-        <input id="r2" type="number" min="0" max="45" placeholder="00">
-        <input id="r3" type="number" min="0" max="45" placeholder="00">
-        <input id="r4" type="number" min="0" max="45" placeholder="00">
-        <input id="r5" type="number" min="0" max="45" placeholder="00">
-        <input id="r6" type="number" min="0" max="45" placeholder="00">
-      </div>
-      <button class="primary" onclick="guardarResultado()">💾 Guardar resultado</button>
-      <div id="resultadoGuardado" class="result"></div>
-      <div id="resultadoGuardadoInfo" class="small muted"></div>
-
-      <div id="registroModalidades" class="result" style="margin-top:16px">
-        <b>📋 Resultados guardados por modalidad</b>
-        <div id="listaModalidades" style="margin-top:10px"></div>
-      </div>
-    </div>
-
-    <div class="actions" style="margin-top:14px">
-      <button class="primary" onclick="analizarQuini()">🔬 Analizar</button>
-    </div>
-    <div id="analisisQuini" class="result hidden"></div>
-
-    <div id="hipotesisSiguiente" class="result hidden"></div>
-
-    <div class="actions" style="margin-top:14px">
-      <button onclick="go('inicio')">← Volver</button>
-    </div>
-  </div>
-</section>
-
-<section id="quiniela" class="panel">
-  <div class="card">
-    <h1>🔢 Quiniela</h1>
-    <p class="muted">La estructura de Quiniela la incorporaremos después, respetando cada jurisdicción y sus reglas.</p>
-    <button onclick="go('inicio')">← Volver</button>
-  </div>
-</section>
-
-</main>
-
-<footer>AzarLab · El laboratorio de los números<br>Sin apuestas ni manejo de dinero.</footer>
+<div class="card">
+<h2>📋 Resultado detectado</h2>
+<p class="note">Posiciones 1 a 20. Podés corregir cualquier número antes de confirmar.</p>
+<div id="lista" class="grid"></div>
+<button id="confirmar" class="primary">✅ Confirmar y guardar resultado</button>
+<div id="guardado" class="status" style="display:none"></div>
+</div>
 
 <script>
-const KEY = 'azarlab_data_v2';
+const imagen=document.getElementById('imagen'),preview=document.getElementById('preview'),leer=document.getElementById('leer'),estado=document.getElementById('estado'),lista=document.getElementById('lista'),confirmar=document.getElementById('confirmar'),guardado=document.getElementById('guardado');
+const KEY='azarlab_data_v2';
 
-function data(){
-  try{
-    const raw = localStorage.getItem(KEY);
-    const d = raw ? JSON.parse(raw) : {};
-    if(!Array.isArray(d.plays)) d.plays = [];
-    if(!Array.isArray(d.draws)) d.draws = [];
-    return d;
-  }catch(e){
-    return {plays:[],draws:[]};
-  }
-}
+function datos(){try{const d=JSON.parse(localStorage.getItem(KEY)||'{}');if(!Array.isArray(d.plays))d.plays=[];if(!Array.isArray(d.draws))d.draws=[];return d}catch(e){return{plays:[],draws:[]}}}
+function guardar(d){localStorage.setItem(KEY,JSON.stringify(d))}
+function campos(){lista.innerHTML='';for(let i=1;i<=20;i++){const x=document.createElement('div');x.className='item';x.innerHTML='<label>'+i+'</label><input id="q'+i+'" maxlength="4" inputmode="numeric" placeholder="0000">';lista.appendChild(x)}}
+campos();
 
-function saveData(d){
-  localStorage.setItem(KEY, JSON.stringify(d));
-}
+imagen.onchange=()=>{const f=imagen.files[0];if(!f)return;preview.src=URL.createObjectURL(f);preview.style.display='block';leer.disabled=false;estado.textContent='Imagen cargada. Presioná “Leer imagen”.'};
 
-function go(page){
-  document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
-  const target = document.getElementById(page);
-  if(target) target.classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});
-}
+leer.onclick=async()=>{
+ const f=imagen.files[0];if(!f)return;leer.disabled=true;estado.textContent='Leyendo la imagen...';
+ try{
+  const r=await Tesseract.recognize(f,'spa',{logger:m=>{if(m.status==='recognizing text')estado.textContent='Leyendo la imagen... '+Math.round((m.progress||0)*100)+'%'}});
+  const nums=(r.data.text.replace(/[^\d\s-]/g,' ').match(/\b\d{4}\b/g)||[]).slice(0,20);
+  campos();nums.forEach((n,i)=>document.getElementById('q'+(i+1)).value=n);
+  estado.className='status '+(nums.length===20?'ok':'warn');
+  estado.textContent=nums.length===20?'Se detectaron 20 números. Revisalos antes de confirmar.':'Se detectaron '+nums.length+' números de 4 cifras. Revisá y completá lo que falte.';
+ }catch(e){estado.className='status warn';estado.textContent='No se pudo leer automáticamente. Podés completar los 20 resultados manualmente.'}
+ leer.disabled=false;
+};
 
-function generarQuini(){
-  const numeros = [];
-  while(numeros.length < 6){
-    const n = Math.floor(Math.random() * 46);
-    if(!numeros.includes(n)) numeros.push(n);
-  }
-  numeros.sort((a,b)=>a-b);
-  const jugada = numeros.map(n=>String(n).padStart(2,'0')).join(' - ');
-  document.getElementById('quiniGenerado').textContent = jugada;
-}
-
-function mostrarIngresoJugada(){
-  document.getElementById('ingresoJugada').classList.remove('hidden');
-  document.getElementById('ingresoJugada').scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-
-function leerSeis(prefix){
-  const numeros = [];
-  for(let i=1;i<=6;i++){
-    const el = document.getElementById(prefix+i);
-    const valor = el.value.trim();
-    if(valor === '') return {ok:false,error:'Completá los 6 números.'};
-    const numero = Number(valor);
-    if(!Number.isInteger(numero) || numero < 0 || numero > 45){
-      return {ok:false,error:'Los números deben estar entre 00 y 45.'};
-    }
-    if(numeros.includes(numero)){
-      return {ok:false,error:'No podés repetir un número.'};
-    }
-    numeros.push(numero);
-  }
-  numeros.sort((a,b)=>a-b);
-  return {ok:true,numeros};
-}
-
-function formatear(numeros){
-  return numeros.map(n=>String(n).padStart(2,'0')).join(' - ');
-}
-
-function guardarMiJugada(){
-  const lectura = leerSeis('j');
-  const box = document.getElementById('jugadaGuardada');
-
-  if(!lectura.ok){
-    box.textContent = lectura.error;
-    return;
-  }
-
-  const jugada = formatear(lectura.numeros);
-  const d = data();
-
-  d.plays.unshift({
-    date:new Date().toLocaleString('es-AR'),
-    game:'Quini 6',
-    nums:lectura.numeros.map(n=>String(n).padStart(2,'0'))
-  });
-
-  saveData(d);
-  box.innerHTML = '<b>Mi jugada:</b> ' + jugada;
-}
-
-function mostrarIngresoResultado(){
-  document.getElementById('ingresoResultado').classList.remove('hidden');
-  mostrarRegistroModalidades();
-  cargarResultadoModalidad();
-  document.getElementById('ingresoResultado').scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-
-function obtenerResultadoModalidad(d, modalidad){
-  const encontrados = d.draws.filter(x =>
-    x.game === 'Quini 6' && x.mode === modalidad
-  );
-  return encontrados.length ? encontrados[0] : null;
-}
-
-function mostrarRegistroModalidades(){
-  const d = data();
-  const lista = document.getElementById('listaModalidades');
-  const modalidades = ['Tradicional','La Segunda','Revancha','Siempre Sale'];
-
-  lista.innerHTML = modalidades.map(modalidad => {
-    const r = obtenerResultadoModalidad(d, modalidad);
-
-    if(!r){
-      return '<div style="padding:7px 0;border-bottom:1px solid #e2e5ec"><b>' +
-        modalidad + ':</b> <span class="muted">sin resultado guardado</span></div>';
-    }
-
-    return '<div style="padding:7px 0;border-bottom:1px solid #e2e5ec"><b>' +
-      modalidad + ':</b> ' + r.nums.join(' - ') + '</div>';
-  }).join('');
-}
-
-function cargarResultadoModalidad(){
-  const modalidad = document.getElementById('modalidad').value;
-  const box = document.getElementById('resultadoGuardado');
-  const info = document.getElementById('resultadoGuardadoInfo');
-  const d = data();
-
-  const encontrado = obtenerResultadoModalidad(d, modalidad);
-
-  if(!encontrado){
-    for(let i=1;i<=6;i++){
-      document.getElementById('r'+i).value = '';
-    }
-    box.innerHTML = '<b>' + modalidad + ':</b> todavía no hay un resultado guardado.';
-    info.textContent = '';
-    mostrarRegistroModalidades();
-    return;
-  }
-
-  encontrado.nums.forEach((n,i)=>{
-    document.getElementById('r'+(i+1)).value = Number(n);
-  });
-
-  box.innerHTML = '<b>' + modalidad + ':</b> ' + encontrado.nums.join(' - ');
-  info.textContent = 'Resultado guardado para ' + modalidad + '.';
-  mostrarRegistroModalidades();
-}
-
-function guardarResultado(){
-  const lectura = leerSeis('r');
-  const box = document.getElementById('resultadoGuardado');
-
-  if(!lectura.ok){
-    box.textContent = lectura.error;
-    return;
-  }
-
-  const modalidad = document.getElementById('modalidad').value;
-  const resultado = formatear(lectura.numeros);
-  const d = data();
-
-  const registro = {
-    date:new Date().toLocaleString('es-AR'),
-    game:'Quini 6',
-    mode:modalidad,
-    nums:lectura.numeros.map(n=>String(n).padStart(2,'0'))
-  };
-
-  // Para cada modalidad conservamos un solo resultado actual.
-  // Si se vuelve a guardar esa modalidad, se actualiza solamente esa modalidad.
-  // El resultado guardado pertenece exclusivamente a la modalidad seleccionada.
-  // Si ya existía, se actualiza esa modalidad; las otras tres quedan intactas.
-  d.draws = d.draws.filter(x =>
-    !(x.game === 'Quini 6' && x.mode === modalidad)
-  );
-  d.draws.unshift(registro);
-
-  saveData(d);
-
-  box.innerHTML = '<b>' + modalidad + ':</b> ' + resultado;
-  document.getElementById('resultadoGuardadoInfo').textContent =
-    'Guardado correctamente para ' + modalidad + '.';
-
-  mostrarRegistroModalidades();
-}
-
-function obtenerPozoExtra(d){
-  const tradicional = obtenerResultadoModalidad(d, 'Tradicional');
-  const revancha = obtenerResultadoModalidad(d, 'Revancha');
-
-  if(!tradicional || !revancha){
-    return null;
-  }
-
-  const unicos = [];
-  [...tradicional.nums, ...revancha.nums].map(String).forEach(n => {
-    if(!unicos.includes(n)) unicos.push(n);
-  });
-
-  unicos.sort((a,b)=>Number(a)-Number(b));
-
-  return unicos;
-}
-
-function analizarQuini(){
-  const d = data();
-  const jugadaGuardada = d.plays.find(x => x.game === 'Quini 6');
-
-  const box = document.getElementById('analisisQuini');
-  const hypBox = document.getElementById('hipotesisSiguiente');
-
-  box.classList.remove('hidden');
-  hypBox.classList.add('hidden');
-
-  if(!jugadaGuardada){
-    box.innerHTML = '<b>No hay una jugada guardada para analizar.</b>';
-    return;
-  }
-
-  const j = jugadaGuardada.nums.map(String);
-  const modalidades = ['Tradicional','La Segunda','Revancha','Siempre Sale'];
-
-  let htmlAnalisis =
-    '<h3 style="margin-top:0">🔬 Análisis de las 4 modalidades</h3>' +
-    '<p><b>Mi jugada:</b> ' + j.join(' - ') + '</p>';
-
-  let totalAciertos = 0;
-  const resultados = [];
-
-  modalidades.forEach(modalidad => {
-    const resultado = obtenerResultadoModalidad(d, modalidad);
-
-    htmlAnalisis +=
-      '<div style="margin-top:10px;padding:10px;background:#f7f8fa;' +
-      'border:1px solid #e2e5ec;border-radius:12px">' +
-      '<div style="font-size:18px"><b>🎰 ' + modalidad + '</b></div>';
-
-    if(!resultado){
-      htmlAnalisis += '<br><span class="muted">Sin resultado guardado.</span></div>';
-      return;
-    }
-
-    const r = resultado.nums.map(String);
-    const aciertos = j.filter(n => r.includes(n));
-    totalAciertos += aciertos.length;
-    resultados.push(r);
-
-    htmlAnalisis +=
-      '<br><b>Resultado:</b> ' + r.join(' - ') +
-      '<br><b>Aciertos:</b> ' + aciertos.length +
-      (aciertos.length
-        ? '<br><b>Números acertados:</b> ' + aciertos.join(' - ')
-        : '<br><b>Números acertados:</b> ninguno') +
-      '</div>';
-  });
-
-  // Pozo Extra: se obtiene a partir de Tradicional + Revancha.
-  const pozoExtra = obtenerPozoExtra(d);
-
-  htmlAnalisis +=
-    '<div style="margin-top:10px;padding:10px;background:#f7f8fa;' +
-    'border:1px solid #e2e5ec;border-radius:12px">' +
-    '<div style="font-size:18px"><b>💰 Pozo Extra</b></div>';
-
-  if(!pozoExtra){
-    htmlAnalisis +=
-      '<br><span class="muted">No disponible todavía. Para analizar Pozo Extra deben estar cargados Tradicional y Revancha.</span>';
-  }else{
-    const coincidenciasPozo = j.filter(n => pozoExtra.includes(n));
-
-    htmlAnalisis +=
-      '<br><b>Números que forman el Pozo Extra:</b> ' + pozoExtra.join(' - ') +
-      '<br><b>Coincidencias con mi jugada:</b> ' + coincidenciasPozo.length +
-      (coincidenciasPozo.length
-        ? '<br><b>Números coincidentes:</b> ' + coincidenciasPozo.join(' - ')
-        : '<br><b>Números coincidentes:</b> ninguno');
-  }
-
-  htmlAnalisis +=
-    '<div style="margin-top:12px;padding-top:10px;border-top:1px solid #e2e5ec">' +
-    '<b>Aciertos acumulados en las 4 modalidades:</b> ' + totalAciertos +
-    '</div></div>';
-
-  box.innerHTML = htmlAnalisis;
-
-  if(!resultados.length){
-    return;
-  }
-
-  // Hipótesis experimental basada en la frecuencia observada.
-  // Pozo Extra no se suma nuevamente para evitar duplicar Tradicional y Revancha.
-  const frecuencia = {};
-  resultados.flat().forEach(n => {
-    frecuencia[n] = (frecuencia[n] || 0) + 1;
-  });
-
-  const candidatos = Object.keys(frecuencia)
-    .sort((a,b) => frecuencia[b] - frecuencia[a] || Number(a) - Number(b));
-
-  const seleccion = candidatos.slice(0,6);
-
-  while(seleccion.length < 6){
-    const n = String(Math.floor(Math.random()*46)).padStart(2,'0');
-    if(!seleccion.includes(n)) seleccion.push(n);
-  }
-
-  seleccion.sort((a,b)=>Number(a)-Number(b));
-
-  hypBox.classList.remove('hidden');
-  hypBox.innerHTML =
-    '<h3 style="margin-top:0">🧪 Hipótesis experimental para la próxima jugada</h3>' +
-    '<p><b>' + seleccion.join(' - ') + '</b></p>' +
-    '<p class="small muted">Esta combinación surge únicamente de la frecuencia observada en los resultados cargados. No implica que esos números tengan mayor probabilidad de salir.</p>' +
-    '<p class="small">Aciertos acumulados de la jugada actual en las 4 modalidades: <b>' + totalAciertos + '</b>.</p>';
-}
+confirmar.onclick=()=>{
+ const nums=[];for(let i=1;i<=20;i++){const v=document.getElementById('q'+i).value.trim();if(!/^\d{4}$/.test(v)){guardado.style.display='block';guardado.className='status warn';guardado.textContent='La posición '+i+' necesita exactamente 4 cifras.';return}nums.push(v)}
+ const d=datos();d.draws=d.draws.filter(x=>!(x.game==='Quiniela'&&x.kind==='resultado_20'));d.draws.unshift({id:Date.now(),date:new Date().toISOString(),game:'Quiniela',kind:'resultado_20',nums});guardar(d);
+ guardado.style.display='block';guardado.className='status ok';guardado.textContent='✅ Resultado guardado correctamente. Las 20 posiciones quedaron registradas.';
+};
 </script>
-
 </body>
 </html>
