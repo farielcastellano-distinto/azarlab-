@@ -3,8 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4817392498788201"
-     crossorigin="anonymous"></script>
 <title>AzarLab — El laboratorio de los números</title>
 <style>
 :root{--bg:#f4f5f8;--card:#fff;--ink:#18202f;--muted:#697386;--accent:#6d28d9;--accent2:#ede9fe;--line:#e2e5ec}
@@ -30,7 +28,7 @@ input,select{width:100%;padding:13px;border:1px solid #cfd4df;border-radius:11px
 footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
 .hidden{display:none!important}
 .small{font-size:14px}
-</style>
+.lab-option{border:1px solid #e2e5ec;border-radius:13px;padding:14px;margin-top:10px}.lab-badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2f7;margin:2px}.lab-table{width:100%;border-collapse:collapse}.lab-table th,.lab-table td{text-align:left;padding:8px;border-bottom:1px solid #e2e5ec}</style>
 </head>
 <body>
 
@@ -61,69 +59,66 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
 <section id="quini" class="panel">
   <div class="card">
     <h1>🎯 Quini 6</h1>
-    <div class="notice"><strong>¿Qué querés hacer?</strong></div>
-
+    <div class="notice"><strong>🔬 Laboratorio Quini 6</strong><br>
+      Analizá tus jugadas, comparalas con los resultados y generá hipótesis experimentales.
+    </div>
     <div class="actions">
       <button class="primary" onclick="generarQuini()">🎲 Generar posible jugada</button>
     </div>
     <div id="quiniGenerado" class="result num"></div>
 
+    <hr style="border:0;border-top:1px solid #e2e5ec;margin:22px 0">
+
+    <h2>1. Mi jugada</h2>
+    <label for="lab_play">Ingresá o pegá los 6 números</label>
+    <input id="lab_play" autocomplete="off"
+      placeholder="Ej.: 02 10 24 25 30 37 · 02-10-24-25-30-37 · 02,10,24,25,30,37">
     <div class="actions">
-      <button class="primary" onclick="mostrarIngresoJugada()">✏️ Ingresar mi jugada</button>
+      <button class="primary" onclick="labSavePlay()">💾 Guardar jugada</button>
+      <button class="secondary" onclick="labUseLastPlay()">↩️ Usar última jugada</button>
+    </div>
+    <div id="lab_playBox" class="result hidden"></div>
+
+    <h2 style="margin-top:24px">2. Resultados históricos</h2>
+    <p class="muted small">Copiá y pegá los resultados con espacios, guiones, comas o barras.</p>
+    <div class="actions">
+      <button class="secondary" onclick="labLoadDemo()">🧪 Cargar datos de prueba</button>
+      <button class="secondary" onclick="labClearHistory()">🗑️ Borrar base del laboratorio</button>
     </div>
 
-    <div id="ingresoJugada" class="result hidden">
-      <p><strong>Ingresá los 6 números de tu jugada</strong></p>
-      <div class="actions">
-        <input id="j1" type="number" min="0" max="45" placeholder="00">
-        <input id="j2" type="number" min="0" max="45" placeholder="00">
-        <input id="j3" type="number" min="0" max="45" placeholder="00">
-        <input id="j4" type="number" min="0" max="45" placeholder="00">
-        <input id="j5" type="number" min="0" max="45" placeholder="00">
-        <input id="j6" type="number" min="0" max="45" placeholder="00">
-      </div>
-      <button class="primary" onclick="guardarMiJugada()">💾 Guardar mi jugada</button>
-      <div id="jugadaGuardada" class="result"></div>
+    <label>Fecha del sorteo</label>
+    <input id="lab_drawDate" type="date">
+    <label>Tradicional</label>
+    <input id="lab_trad" autocomplete="off" placeholder="Ej.: 01 06 09 25 30 33">
+    <label>La Segunda</label>
+    <input id="lab_segunda" autocomplete="off" placeholder="Ej.: 02-06-07-12-18-44">
+    <label>Revancha</label>
+    <input id="lab_revancha" autocomplete="off" placeholder="Ej.: 05,07,12,20,24,31">
+    <label>Siempre Sale</label>
+    <input id="lab_siempre" autocomplete="off" placeholder="Ej.: 14/15/29/31/32/40">
+
+    <div class="actions">
+      <button class="primary" onclick="labAddDraw()">➕ Agregar sorteo</button>
     </div>
+    <div id="lab_drawMsg" class="result hidden"></div>
+    <div id="lab_history" class="result"></div>
 
-    <div class="actions" style="margin-top:14px">
-      <button class="primary" onclick="mostrarIngresoResultado()">🎰 Ingresar resultado</button>
+    <h2 style="margin-top:24px">3. Analizar</h2>
+    <p class="muted small">
+      Frecuencia histórica, recencia, comportamiento por modalidad, ausencia/demora y persistencia reciente.
+    </p>
+    <button class="primary" onclick="labAnalyze()">🔬 Analizar jugada guardada</button>
+    <div id="lab_analysis" class="result hidden"></div>
+
+    <h2 style="margin-top:24px">4. Próxima jugada</h2>
+    <div id="lab_options" class="muted">Primero ejecutá el análisis.</div>
+
+    <h2 style="margin-top:24px">5. Registro experimental</h2>
+    <div id="lab_audit"></div>
+
+    <div class="notice small" style="margin-top:20px">
+      Las hipótesis generadas son experimentales y no implican una mayor probabilidad matemática de salir.
     </div>
-
-    <div id="ingresoResultado" class="result hidden">
-      <p><strong>Ingresá el resultado del sorteo</strong></p>
-      <label for="modalidad">Modalidad</label>
-      <select id="modalidad" onchange="cargarResultadoModalidad()">
-        <option>Tradicional</option>
-        <option>La Segunda</option>
-        <option>Revancha</option>
-        <option>Siempre Sale</option>
-      </select>
-      <label>Los 6 números</label>
-      <div class="actions">
-        <input id="r1" type="number" min="0" max="45" placeholder="00">
-        <input id="r2" type="number" min="0" max="45" placeholder="00">
-        <input id="r3" type="number" min="0" max="45" placeholder="00">
-        <input id="r4" type="number" min="0" max="45" placeholder="00">
-        <input id="r5" type="number" min="0" max="45" placeholder="00">
-        <input id="r6" type="number" min="0" max="45" placeholder="00">
-      </div>
-      <button class="primary" onclick="guardarResultado()">💾 Guardar resultado</button>
-      <div id="resultadoGuardado" class="result"></div>
-      <div id="resultadoGuardadoInfo" class="small muted"></div>
-
-      <div id="registroModalidades" class="result" style="margin-top:16px">
-        <b>📋 Resultados guardados por modalidad</b>
-        <div id="listaModalidades" style="margin-top:10px"></div>
-      </div>
-    </div>
-
-    <div class="actions" style="margin-top:14px">
-      <button class="primary" onclick="analizarQuini()">🔬 Analizar</button>
-    </div>
-    <div id="analisisQuini" class="result hidden"></div>
-
-    <div id="hipotesisSiguiente" class="result hidden"></div>
 
     <div class="actions" style="margin-top:14px">
       <button onclick="go('inicio')">← Volver</button>
@@ -142,6 +137,339 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
 </main>
 
 <footer>AzarLab · El laboratorio de los números<br>Sin apuestas ni manejo de dinero.</footer>
+
+<script>
+
+const LAB_KEY='azarlab_lab_quini6_v1';
+
+function uid(){
+  return 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,10);
+}
+
+function labDB(){
+  try{
+    const x=JSON.parse(localStorage.getItem(LAB_KEY)||'{}');
+    if(!Array.isArray(x.plays))x.plays=[];
+    if(!Array.isArray(x.draws))x.draws=[];
+    if(!Array.isArray(x.tests))x.tests=[];
+    return x;
+  }catch(e){return {plays:[],draws:[],tests:[]}}
+}
+function saveLabDB(x){localStorage.setItem(LAB_KEY,JSON.stringify(x))}
+function labNums(raw){
+  const s=String(raw||'').trim();
+  if(!s)return null;
+  const encontrados=s.match(/\d{1,2}/g)||[];
+  const a=encontrados.map(x=>Number(x));
+  if(a.length!==6)return null;
+  if(a.some(n=>!Number.isInteger(n)||n<0||n>45))return null;
+  if(new Set(a).size!==6)return null;
+  return [...a].sort((a,b)=>a-b).map(n=>String(n).padStart(2,'0'));
+}
+function labFmt(a){return a.map(String).map(x=>x.padStart(2,'0')).join(' - ')}
+function labShow(id,msg,html=false){
+  const e=document.getElementById(id);e.classList.remove('hidden');
+  if(html)e.innerHTML=msg;else e.textContent=msg;
+}
+function labSavePlay(){
+  const a=labNums(document.getElementById('lab_play').value);
+  if(!a){labShow('lab_playBox','No pude reconocer 6 números válidos. Podés usar espacios, guiones, comas o barras.');return}
+  const d=labDB();
+  d.plays.unshift({id:uid(),date:new Date().toISOString(),nums:a});
+  saveLabDB(d);
+  document.getElementById('lab_play').value=labFmt(a);
+  labShow('lab_playBox','Jugada guardada: '+labFmt(a));
+}
+function labUseLastPlay(){
+  const d=labDB(); if(!d.plays.length){labShow('lab_playBox','Todavía no hay una jugada guardada.');return}
+  document.getElementById('lab_play').value=labFmt(d.plays[0].nums);
+  labShow('lab_playBox','Se recuperó la última jugada: '+labFmt(d.plays[0].nums));
+}
+function labAddDraw(){
+  const fields=['lab_trad','lab_segunda','lab_revancha','lab_siempre'];
+  const vals=fields.map(id=>labNums(document.getElementById(id).value));
+  if(vals.some(x=>!x)){labShow('lab_drawMsg','No pude reconocer alguna modalidad. Pegá los 6 números separados por espacios, guiones, comas o barras.');return}
+  const date=document.getElementById('lab_drawDate').value || new Date().toISOString().slice(0,10);
+  const d=labDB();
+  d.draws.unshift({
+    id:uid(),date,
+    Tradicional:vals[0],'La Segunda':vals[1],Revancha:vals[2],'Siempre Sale':vals[3]
+  });
+  saveLabDB(d); labRenderHistory();
+  labShow('lab_drawMsg','Sorteo agregado correctamente: '+date);
+}
+function labRenderHistory(){
+  const d=labDB(), box=document.getElementById('lab_history');
+  if(!d.draws.length){box.innerHTML='<b>Base histórica:</b> todavía no hay sorteos.';return}
+  let h='<b>Base histórica local: '+d.draws.length+' sorteo(s)</b><div style="overflow:auto;margin-top:10px"><table><tr><th>Fecha</th><th>Tradicional</th><th>La Segunda</th><th>Revancha</th><th>Siempre Sale</th></tr>';
+  d.draws.forEach(x=>{
+    h+='<tr><td>'+x.date+'</td><td>'+labFmt(x.Tradicional)+'</td><td>'+labFmt(x['La Segunda'])+'</td><td>'+labFmt(x.Revancha)+'</td><td>'+labFmt(x['Siempre Sale'])+'</td></tr>'
+  });
+  box.innerHTML=h+'</table></div>';
+}
+function labClearHistory(){
+  if(!confirm('¿Borrar la base experimental local y sus pruebas?'))return;
+  localStorage.removeItem(LAB_KEY);labRenderHistory();
+  document.getElementById('lab_analysis').classList.add('hidden');
+  document.getElementById('lab_options').textContent='Primero ejecutá el análisis.';
+  document.getElementById('lab_audit').innerHTML='';
+}
+function labLoadDemo(){
+  const demo=[
+    ['2026-09-01',['02','10','24','25','30','37'],['01','05','17','22','31','40'],['03','10','20','23','30','44'],['02','09','15','25','33','38']],
+    ['2026-09-04',['05','10','22','24','31','38'],['02','07','10','23','30','37'],['01','12','20','25','31','45'],['05','09','18','22','32','40']],
+    ['2026-09-07',['03','10','21','24','30','38'],['05','10','19','23','31','42'],['02','12','20','24','33','44'],['06','10','17','25','31','39']],
+    ['2026-09-10',['02','08','10','22','30','37'],['01','05','15','24','31','38'],['07','10','20','23','30','41'],['02','09','18','25','32','40']],
+    ['2026-09-13',['04','10','22','24','30','38'],['02','06','17','23','31','37'],['05','12','20','25','30','44'],['03','10','19','22','33','39']]
+  ];
+  const d=labDB();
+  demo.forEach(x=>d.draws.push({id:uid(),date:x[0],Tradicional:x[1],'La Segunda':x[2],Revancha:x[3],'Siempre Sale':x[4]}));
+  saveLabDB(d);labRenderHistory();labShow('lab_drawMsg','Se cargaron datos de prueba. Están marcados conceptualmente como datos de prueba y no representan resultados oficiales.');
+}
+function labAnalyze(){
+  try{
+    const d=labDB();
+
+    // Primero usamos la última jugada guardada.
+    // Si no existe, intentamos leer lo que haya escrito en el campo.
+    let play=null;
+    if(d.plays.length && Array.isArray(d.plays[0].nums)){
+      play=d.plays[0].nums;
+    }else{
+      play=labNums(document.getElementById('lab_play').value);
+    }
+
+    if(!play){
+      labShow('lab_analysis','Primero guardá una jugada válida con el botón "Guardar jugada".');
+      return;
+    }
+
+    if(!d.draws.length){
+      labShow('lab_analysis','La jugada está guardada, pero todavía no hay resultados históricos para analizar. Agregá al menos un sorteo.');
+      return;
+    }
+
+    const modes=['Tradicional','La Segunda','Revancha','Siempre Sale'];
+
+    // Limpiamos registros incompletos para que un dato viejo no rompa el análisis.
+    const validDraws=d.draws.filter(x =>
+      x &&
+      modes.every(m=>Array.isArray(x[m]) && x[m].length===6)
+    );
+
+    if(!validDraws.length){
+      labShow('lab_analysis','Hay jugadas guardadas, pero no encontré sorteos completos para analizar.');
+      return;
+    }
+
+    const all=validDraws.flatMap(x =>
+      modes.map(m=>({mode:m,nums:x[m],date:x.date}))
+    );
+    const total=all.length;
+
+    const stats={};
+    for(let n=0;n<46;n++){
+      const key=String(n).padStart(2,'0');
+      stats[key]={
+        freq:0,
+        mode:{'Tradicional':0,'La Segunda':0,'Revancha':0,'Siempre Sale':0},
+        lastDraw:Infinity,
+        recent:0
+      };
+    }
+
+    all.forEach((r,i)=>{
+      const drawIndex=Math.floor(i/modes.length);
+      r.nums.forEach(n=>{
+        const key=String(n).padStart(2,'0');
+        if(!stats[key])return;
+        const st=stats[key];
+        st.freq++;
+        st.mode[r.mode]++;
+        st.lastDraw=Math.min(st.lastDraw,drawIndex);
+
+        // Últimos 5 sorteos completos = 20 resultados de modalidad.
+        if(i>=Math.max(0,total-20))st.recent++;
+      });
+    });
+
+    const statValues=Object.values(stats);
+    const maxFreq=Math.max(...statValues.map(st=>st.freq),1);
+    const maxRecent=Math.max(...statValues.map(st=>st.recent),1);
+
+    Object.entries(stats).forEach(([n,st])=>{
+      st.frequencyScore=st.freq/maxFreq;
+
+      // 0 = no apareció; 1 = apareció en el sorteo más reciente.
+      st.recencyScore=st.lastDraw===Infinity
+        ? 0
+        : 1-(st.lastDraw/Math.max(validDraws.length-1,1));
+
+      // Cantidad de sorteos desde la última aparición.
+      st.delay=st.lastDraw===Infinity
+        ? validDraws.length
+        : st.lastDraw;
+
+      const maxDelay=Math.max(validDraws.length,1);
+      st.delayScore=st.delay/maxDelay;
+
+      st.persistenceScore=st.recent/maxRecent;
+
+      const modeValues=Object.values(st.mode);
+      const modeMax=Math.max(...modeValues,0);
+      const modeTotal=modeValues.reduce((a,b)=>a+b,0);
+
+      st.modalityScore=modeTotal
+        ? modeMax/modeTotal
+        : 0;
+
+      st.score=
+        .35*st.frequencyScore+
+        .25*st.recencyScore+
+        .15*st.modalityScore+
+        .15*st.delayScore+
+        .10*st.persistenceScore;
+    });
+
+    const hitsByMode={};
+    modes.forEach(m=>{
+      const latest=validDraws[0][m];
+      hitsByMode[m]=latest
+        ? play.filter(n=>latest.map(String).map(x=>x.padStart(2,'0')).includes(String(n).padStart(2,'0'))).length
+        : 0;
+    });
+
+    const ranked=Object.entries(stats)
+      .sort((a,b)=>b[1].score-a[1].score || Number(a[0])-Number(b[0]));
+
+    const selected=[];
+
+    // Primero respetamos diversidad estructural.
+    for(const [n] of ranked){
+      if(selected.length>=6)break;
+
+      const decade=Math.floor(Number(n)/10);
+      const parity=Number(n)%2;
+
+      const sameDecade=selected.filter(x=>Math.floor(Number(x)/10)===decade).length;
+      const sameParity=selected.filter(x=>Number(x)%2===parity).length;
+
+      if(sameDecade>=2)continue;
+      if(sameParity>=4)continue;
+
+      selected.push(n);
+    }
+
+    // Si las restricciones no permiten completar 6, completamos con los mejores.
+    for(const [n] of ranked){
+      if(selected.length>=6)break;
+      if(!selected.includes(n))selected.push(n);
+    }
+
+    selected.sort((a,b)=>Number(a)-Number(b));
+
+    const sum=play.reduce((a,n)=>a+Number(n),0);
+    const evens=play.filter(n=>Number(n)%2===0).length;
+    const top=ranked.slice(0,10);
+
+    let h=
+      '<h3>📊 Lectura de la jugada guardada</h3>'+
+      '<p class="nums">'+labFmt(play)+'</p>'+
+      '<div class="grid">'+
+      '<div class="metric">Suma<b>'+sum+'</b></div>'+
+      '<div class="metric">Pares / impares<b>'+evens+' / '+(6-evens)+'</b></div>'+
+      '<div class="metric">Sorteos analizados<b>'+validDraws.length+'</b></div>'+
+      '<div class="metric">Resultados por modalidad<b>'+total+'</b></div>'+
+      '</div>'+
+      '<div class="result"><b>Último sorteo cargado — aciertos de esta jugada</b><br>'+
+      modes.map(m=>'<span class="badge">'+m+': '+hitsByMode[m]+'</span>').join('')+
+      '</div>'+
+      '<div class="result"><b>Componentes del motor experimental</b><ul>'+
+      '<li>35% frecuencia histórica</li>'+
+      '<li>25% recencia</li>'+
+      '<li>15% comportamiento por modalidad</li>'+
+      '<li>15% ausencia/demora</li>'+
+      '<li>10% persistencia reciente</li>'+
+      '</ul>'+
+      '<span class="muted small">Son ponderaciones experimentales para comparar estrategias; no representan probabilidades matemáticas de salida.</span></div>'+
+      '<div class="result"><b>🔎 Números con mayor puntaje experimental</b>'+
+      '<div style="overflow:auto;margin-top:8px"><table>'+
+      '<tr><th>Número</th><th>Puntaje</th><th>Frecuencia</th><th>Demora</th><th>Persistencia</th></tr>'+
+      top.map(([n,st])=>
+        '<tr><td><b>'+n+'</b></td>'+
+        '<td>'+st.score.toFixed(3)+'</td>'+
+        '<td>'+st.freq+'</td>'+
+        '<td>'+st.delay+'</td>'+
+        '<td>'+st.recent+'</td></tr>'
+      ).join('')+
+      '</table></div></div>';
+
+    labShow('lab_analysis',h,true);
+
+    const random=[];
+    while(random.length<6){
+      const n=String(Math.floor(Math.random()*46)).padStart(2,'0');
+      if(!random.includes(n))random.push(n);
+    }
+    random.sort((a,b)=>Number(a)-Number(b));
+
+    const currentScore=
+      play.reduce((a,n)=>a+(stats[String(n).padStart(2,'0')]?.score||0),0)/6;
+
+    const hypothesisScore=
+      selected.reduce((a,n)=>a+(stats[n]?.score||0),0)/6;
+
+    document.getElementById('lab_options').innerHTML=
+      '<div class="option"><h4>🔄 A. Mantener la jugada anterior</h4>'+
+      '<p>'+labFmt(play)+'</p>'+
+      '<span class="muted small">Sirve para medir qué ocurre cuando no cambiamos la combinación.</span></div>'+
+
+      '<div class="option"><h4>🧪 B. Nueva hipótesis de AzarLab</h4>'+
+      '<p class="nums">'+labFmt(selected)+'</p>'+
+      '<p class="muted small">Construida con el motor experimental y criterios de diversidad estructural.</p></div>'+
+
+      '<div class="option"><h4>🎲 C. Jugada aleatoria de referencia</h4>'+
+      '<p class="nums">'+labFmt(random)+'</p>'+
+      '<p class="muted small">Funciona como referencia experimental para comparar contra las otras dos estrategias.</p></div>'+
+
+      '<div class="result"><b>Indicador experimental</b><br>'+
+      'Promedio de puntaje de la jugada actual: '+currentScore.toFixed(3)+
+      '<br>Promedio de puntaje de la hipótesis: '+hypothesisScore.toFixed(3)+
+      '<br><span class="muted small">Estos puntajes pertenecen al modelo, no son una medida de probabilidad de ganar.</span></div>';
+
+    d.tests.unshift({
+      id:uid(),
+      date:new Date().toISOString(),
+      play:[...play],
+      keep:[...play],
+      hypothesis:[...selected],
+      random:[...random],
+      currentScore:Number(currentScore.toFixed(4)),
+      hypothesisScore:Number(hypothesisScore.toFixed(4))
+    });
+
+    saveLabDB(d);
+    labRenderAudit();
+
+  }catch(err){
+    console.error(err);
+    labShow(
+      'lab_analysis',
+      'El análisis encontró un problema con algún dato guardado. La jugada y los resultados siguen guardados. Detalle técnico: '+err.message
+    );
+  }
+}
+function labRenderAudit(){
+  const d=labDB(),box=document.getElementById('lab_audit');
+  if(!d.tests.length){box.innerHTML='<span class="muted">Todavía no hay análisis registrados.</span>';return}
+  box.innerHTML='<div style="overflow:auto"><table><tr><th>Fecha</th><th>Jugada</th><th>Hipótesis</th><th>Referencia aleatoria</th></tr>'+
+    d.tests.slice(0,20).map(t=>'<tr><td>'+new Date(t.date).toLocaleString('es-AR')+'</td><td>'+labFmt(t.play)+'</td><td>'+labFmt(t.hypothesis)+'</td><td>'+labFmt(t.random)+'</td></tr>').join('')+
+    '</table></div>';
+}
+document.getElementById('lab_drawDate').value=new Date().toISOString().slice(0,10);
+labRenderHistory();labRenderAudit();
+
+</script>
 
 <script>
 const KEY = 'azarlab_data_v2';
