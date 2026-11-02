@@ -80,7 +80,15 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
     <div id="lab_playBox" class="result hidden"></div>
 
     <h2 style="margin-top:24px">2. Resultados históricos</h2>
-    <p class="muted small">Copiá y pegá los resultados con espacios, guiones, comas o barras.</p>
+    <div class="lab-option">
+      <strong>🌐 Último sorteo oficial — conexión automática</strong>
+      <p class="muted small">Consultá el Worker para incorporar las cuatro modalidades al historial.</p>
+      <div class="actions">
+        <button class="primary" id="lab_fetchButton" onclick="labFetchLatestDraw()">↻ Actualizar último sorteo</button>
+      </div>
+      <div id="lab_fetchStatus" class="result" aria-live="polite">Listo para consultar el último sorteo.</div>
+    </div>
+    <p class="muted small">También podés cargar resultados manualmente con espacios, guiones, comas o barras.</p>
     <div class="actions">
       <button class="secondary" onclick="labLoadDemo()">🧪 Cargar datos de prueba</button>
       <button class="secondary" onclick="labClearHistory()">🗑️ Borrar base del laboratorio</button>
@@ -139,6 +147,107 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
 <footer>AzarLab · El laboratorio de los números<br>Sin apuestas ni manejo de dinero.</footer>
 
 <script>
+
+
+const WORKER_URL = 'https://dark-fog-7f18.farielcastellano.workers.dev/quini6';
+
+function go(page){
+  document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+  const target = document.getElementById(page);
+  if(target) target.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function generarQuini(){
+  const numeros = [];
+  while(numeros.length < 6){
+    const n = Math.floor(Math.random() * 46);
+    if(!numeros.includes(n)) numeros.push(n);
+  }
+  numeros.sort((a,b)=>a-b);
+  document.getElementById('quiniGenerado').textContent =
+    numeros.map(n=>String(n).padStart(2,'0')).join(' - ');
+}
+
+function labDateToISO(value){
+  const m = String(value || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  return m ? m[3] + '-' + m[2] + '-' + m[1] : null;
+}
+
+async function labFetchLatestDraw(){
+  const button = document.getElementById('lab_fetchButton');
+  const status = document.getElementById('lab_fetchStatus');
+  button.disabled = true;
+  button.textContent = 'Consultando...';
+  status.textContent = 'Consultando el Worker...';
+
+  try{
+    const response = await fetch(WORKER_URL, {cache:'no-store'});
+    if(!response.ok) throw new Error('HTTP ' + response.status);
+    const result = await response.json();
+    if(!result.ok) throw new Error(result.error || 'No se pudieron obtener los resultados.');
+
+    const raw = [
+      result.traditional, result.segunda,
+      result.revancha, result.siempreSale
+    ];
+    if(raw.some(a => !Array.isArray(a) || a.length !== 6)){
+      throw new Error('La respuesta no contiene las cuatro modalidades completas.');
+    }
+
+    const nums = raw.map(a => labNums(a.join(' ')));
+    if(nums.some(a => !a)) throw new Error('Hay números inválidos o repetidos.');
+    const date = labDateToISO(result.drawDate);
+    if(!date) throw new Error('El Worker no devolvió una fecha válida.');
+
+    const d = labDB();
+    const duplicate = d.draws.some(x =>
+      x.date === date &&
+      JSON.stringify(x.Tradicional) === JSON.stringify(nums[0]) &&
+      JSON.stringify(x['La Segunda']) === JSON.stringify(nums[1]) &&
+      JSON.stringify(x.Revancha) === JSON.stringify(nums[2]) &&
+      JSON.stringify(x['Siempre Sale']) === JSON.stringify(nums[3])
+    );
+
+    if(duplicate){
+      status.textContent = 'El sorteo del ' + result.drawDate +
+        ' ya estaba guardado. No se creó un duplicado.';
+      return;
+    }
+
+    d.draws.unshift({
+      id:uid(), date:date, drawNumber:result.drawNumber || null,
+      source:result.source || WORKER_URL,
+      Tradicional:nums[0], 'La Segunda':nums[1],
+      Revancha:nums[2], 'Siempre Sale':nums[3]
+    });
+    saveLabDB(d);
+    labRenderHistory();
+
+    document.getElementById('lab_drawDate').value = date;
+    document.getElementById('lab_trad').value = labFmt(nums[0]);
+    document.getElementById('lab_segunda').value = labFmt(nums[1]);
+    document.getElementById('lab_revancha').value = labFmt(nums[2]);
+    document.getElementById('lab_siempre').value = labFmt(nums[3]);
+
+    status.innerHTML =
+      '<b>Sorteo incorporado correctamente.</b><br>' +
+      'Fecha: ' + result.drawDate + '<br>' +
+      'Número de sorteo: ' + (result.drawNumber || 'No informado') + '<br>' +
+      'Tradicional: ' + labFmt(nums[0]) + '<br>' +
+      'La Segunda: ' + labFmt(nums[1]) + '<br>' +
+      'Revancha: ' + labFmt(nums[2]) + '<br>' +
+      'Siempre Sale: ' + labFmt(nums[3]);
+
+    labShow('lab_drawMsg', 'Sorteo oficial agregado al historial: ' + result.drawDate);
+  }catch(error){
+    status.textContent = 'No se pudo actualizar: ' + error.message +
+      '. El historial existente no fue modificado.';
+  }finally{
+    button.disabled = false;
+    button.textContent = '↻ Actualizar último sorteo';
+  }
+}
 
 const LAB_KEY='azarlab_lab_quini6_v1';
 
@@ -201,9 +310,9 @@ function labAddDraw(){
 function labRenderHistory(){
   const d=labDB(), box=document.getElementById('lab_history');
   if(!d.draws.length){box.innerHTML='<b>Base histórica:</b> todavía no hay sorteos.';return}
-  let h='<b>Base histórica local: '+d.draws.length+' sorteo(s)</b><div style="overflow:auto;margin-top:10px"><table><tr><th>Fecha</th><th>Tradicional</th><th>La Segunda</th><th>Revancha</th><th>Siempre Sale</th></tr>';
+  let h='<b>Base histórica local: '+d.draws.length+' sorteo(s)</b><div style="overflow:auto;margin-top:10px"><table><tr><th>Fecha</th><th>N.º sorteo</th><th>Tradicional</th><th>La Segunda</th><th>Revancha</th><th>Siempre Sale</th></tr>';
   d.draws.forEach(x=>{
-    h+='<tr><td>'+x.date+'</td><td>'+labFmt(x.Tradicional)+'</td><td>'+labFmt(x['La Segunda'])+'</td><td>'+labFmt(x.Revancha)+'</td><td>'+labFmt(x['Siempre Sale'])+'</td></tr>'
+    h+='<tr><td>'+x.date+'</td><td>'+(x.drawNumber || '—')+'</td><td>'+labFmt(x.Tradicional)+'</td><td>'+labFmt(x['La Segunda'])+'</td><td>'+labFmt(x.Revancha)+'</td><td>'+labFmt(x['Siempre Sale'])+'</td></tr>'
   });
   box.innerHTML=h+'</table></div>';
 }
@@ -466,325 +575,11 @@ function labRenderAudit(){
     d.tests.slice(0,20).map(t=>'<tr><td>'+new Date(t.date).toLocaleString('es-AR')+'</td><td>'+labFmt(t.play)+'</td><td>'+labFmt(t.hypothesis)+'</td><td>'+labFmt(t.random)+'</td></tr>').join('')+
     '</table></div>';
 }
-document.getElementById('lab_drawDate').value=new Date().toISOString().slice(0,10);
+document.getElementById('lab_drawDate').value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
 labRenderHistory();labRenderAudit();
 
 </script>
 
-<script>
-const KEY = 'azarlab_data_v2';
-
-function data(){
-  try{
-    const raw = localStorage.getItem(KEY);
-    const d = raw ? JSON.parse(raw) : {};
-    if(!Array.isArray(d.plays)) d.plays = [];
-    if(!Array.isArray(d.draws)) d.draws = [];
-    return d;
-  }catch(e){
-    return {plays:[],draws:[]};
-  }
-}
-
-function saveData(d){
-  localStorage.setItem(KEY, JSON.stringify(d));
-}
-
-function go(page){
-  document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
-  const target = document.getElementById(page);
-  if(target) target.classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function generarQuini(){
-  const numeros = [];
-  while(numeros.length < 6){
-    const n = Math.floor(Math.random() * 46);
-    if(!numeros.includes(n)) numeros.push(n);
-  }
-  numeros.sort((a,b)=>a-b);
-  const jugada = numeros.map(n=>String(n).padStart(2,'0')).join(' - ');
-  document.getElementById('quiniGenerado').textContent = jugada;
-}
-
-function mostrarIngresoJugada(){
-  document.getElementById('ingresoJugada').classList.remove('hidden');
-  document.getElementById('ingresoJugada').scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-
-function leerSeis(prefix){
-  const numeros = [];
-  for(let i=1;i<=6;i++){
-    const el = document.getElementById(prefix+i);
-    const valor = el.value.trim();
-    if(valor === '') return {ok:false,error:'Completá los 6 números.'};
-    const numero = Number(valor);
-    if(!Number.isInteger(numero) || numero < 0 || numero > 45){
-      return {ok:false,error:'Los números deben estar entre 00 y 45.'};
-    }
-    if(numeros.includes(numero)){
-      return {ok:false,error:'No podés repetir un número.'};
-    }
-    numeros.push(numero);
-  }
-  numeros.sort((a,b)=>a-b);
-  return {ok:true,numeros};
-}
-
-function formatear(numeros){
-  return numeros.map(n=>String(n).padStart(2,'0')).join(' - ');
-}
-
-function guardarMiJugada(){
-  const lectura = leerSeis('j');
-  const box = document.getElementById('jugadaGuardada');
-
-  if(!lectura.ok){
-    box.textContent = lectura.error;
-    return;
-  }
-
-  const jugada = formatear(lectura.numeros);
-  const d = data();
-
-  d.plays.unshift({
-    date:new Date().toLocaleString('es-AR'),
-    game:'Quini 6',
-    nums:lectura.numeros.map(n=>String(n).padStart(2,'0'))
-  });
-
-  saveData(d);
-  box.innerHTML = '<b>Mi jugada:</b> ' + jugada;
-}
-
-function mostrarIngresoResultado(){
-  document.getElementById('ingresoResultado').classList.remove('hidden');
-  mostrarRegistroModalidades();
-  cargarResultadoModalidad();
-  document.getElementById('ingresoResultado').scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-
-function obtenerResultadoModalidad(d, modalidad){
-  const encontrados = d.draws.filter(x =>
-    x.game === 'Quini 6' && x.mode === modalidad
-  );
-  return encontrados.length ? encontrados[0] : null;
-}
-
-function mostrarRegistroModalidades(){
-  const d = data();
-  const lista = document.getElementById('listaModalidades');
-  const modalidades = ['Tradicional','La Segunda','Revancha','Siempre Sale'];
-
-  lista.innerHTML = modalidades.map(modalidad => {
-    const r = obtenerResultadoModalidad(d, modalidad);
-
-    if(!r){
-      return '<div style="padding:7px 0;border-bottom:1px solid #e2e5ec"><b>' +
-        modalidad + ':</b> <span class="muted">sin resultado guardado</span></div>';
-    }
-
-    return '<div style="padding:7px 0;border-bottom:1px solid #e2e5ec"><b>' +
-      modalidad + ':</b> ' + r.nums.join(' - ') + '</div>';
-  }).join('');
-}
-
-function cargarResultadoModalidad(){
-  const modalidad = document.getElementById('modalidad').value;
-  const box = document.getElementById('resultadoGuardado');
-  const info = document.getElementById('resultadoGuardadoInfo');
-  const d = data();
-
-  const encontrado = obtenerResultadoModalidad(d, modalidad);
-
-  if(!encontrado){
-    for(let i=1;i<=6;i++){
-      document.getElementById('r'+i).value = '';
-    }
-    box.innerHTML = '<b>' + modalidad + ':</b> todavía no hay un resultado guardado.';
-    info.textContent = '';
-    mostrarRegistroModalidades();
-    return;
-  }
-
-  encontrado.nums.forEach((n,i)=>{
-    document.getElementById('r'+(i+1)).value = Number(n);
-  });
-
-  box.innerHTML = '<b>' + modalidad + ':</b> ' + encontrado.nums.join(' - ');
-  info.textContent = 'Resultado guardado para ' + modalidad + '.';
-  mostrarRegistroModalidades();
-}
-
-function guardarResultado(){
-  const lectura = leerSeis('r');
-  const box = document.getElementById('resultadoGuardado');
-
-  if(!lectura.ok){
-    box.textContent = lectura.error;
-    return;
-  }
-
-  const modalidad = document.getElementById('modalidad').value;
-  const resultado = formatear(lectura.numeros);
-  const d = data();
-
-  const registro = {
-    date:new Date().toLocaleString('es-AR'),
-    game:'Quini 6',
-    mode:modalidad,
-    nums:lectura.numeros.map(n=>String(n).padStart(2,'0'))
-  };
-
-  // Para cada modalidad conservamos un solo resultado actual.
-  // Si se vuelve a guardar esa modalidad, se actualiza solamente esa modalidad.
-  // El resultado guardado pertenece exclusivamente a la modalidad seleccionada.
-  // Si ya existía, se actualiza esa modalidad; las otras tres quedan intactas.
-  d.draws = d.draws.filter(x =>
-    !(x.game === 'Quini 6' && x.mode === modalidad)
-  );
-  d.draws.unshift(registro);
-
-  saveData(d);
-
-  box.innerHTML = '<b>' + modalidad + ':</b> ' + resultado;
-  document.getElementById('resultadoGuardadoInfo').textContent =
-    'Guardado correctamente para ' + modalidad + '.';
-
-  mostrarRegistroModalidades();
-}
-
-function obtenerPozoExtra(d){
-  const tradicional = obtenerResultadoModalidad(d, 'Tradicional');
-  const revancha = obtenerResultadoModalidad(d, 'Revancha');
-
-  if(!tradicional || !revancha){
-    return null;
-  }
-
-  const unicos = [];
-  [...tradicional.nums, ...revancha.nums].map(String).forEach(n => {
-    if(!unicos.includes(n)) unicos.push(n);
-  });
-
-  unicos.sort((a,b)=>Number(a)-Number(b));
-
-  return unicos;
-}
-
-function analizarQuini(){
-  const d = data();
-  const jugadaGuardada = d.plays.find(x => x.game === 'Quini 6');
-
-  const box = document.getElementById('analisisQuini');
-  const hypBox = document.getElementById('hipotesisSiguiente');
-
-  box.classList.remove('hidden');
-  hypBox.classList.add('hidden');
-
-  if(!jugadaGuardada){
-    box.innerHTML = '<b>No hay una jugada guardada para analizar.</b>';
-    return;
-  }
-
-  const j = jugadaGuardada.nums.map(String);
-  const modalidades = ['Tradicional','La Segunda','Revancha','Siempre Sale'];
-
-  let htmlAnalisis =
-    '<h3 style="margin-top:0">🔬 Análisis de las 4 modalidades</h3>' +
-    '<p><b>Mi jugada:</b> ' + j.join(' - ') + '</p>';
-
-  let totalAciertos = 0;
-  const resultados = [];
-
-  modalidades.forEach(modalidad => {
-    const resultado = obtenerResultadoModalidad(d, modalidad);
-
-    htmlAnalisis +=
-      '<div style="margin-top:10px;padding:10px;background:#f7f8fa;' +
-      'border:1px solid #e2e5ec;border-radius:12px">' +
-      '<div style="font-size:18px"><b>🎰 ' + modalidad + '</b></div>';
-
-    if(!resultado){
-      htmlAnalisis += '<br><span class="muted">Sin resultado guardado.</span></div>';
-      return;
-    }
-
-    const r = resultado.nums.map(String);
-    const aciertos = j.filter(n => r.includes(n));
-    totalAciertos += aciertos.length;
-    resultados.push(r);
-
-    htmlAnalisis +=
-      '<br><b>Resultado:</b> ' + r.join(' - ') +
-      '<br><b>Aciertos:</b> ' + aciertos.length +
-      (aciertos.length
-        ? '<br><b>Números acertados:</b> ' + aciertos.join(' - ')
-        : '<br><b>Números acertados:</b> ninguno') +
-      '</div>';
-  });
-
-  // Pozo Extra: se obtiene a partir de Tradicional + Revancha.
-  const pozoExtra = obtenerPozoExtra(d);
-
-  htmlAnalisis +=
-    '<div style="margin-top:10px;padding:10px;background:#f7f8fa;' +
-    'border:1px solid #e2e5ec;border-radius:12px">' +
-    '<div style="font-size:18px"><b>💰 Pozo Extra</b></div>';
-
-  if(!pozoExtra){
-    htmlAnalisis +=
-      '<br><span class="muted">No disponible todavía. Para analizar Pozo Extra deben estar cargados Tradicional y Revancha.</span>';
-  }else{
-    const coincidenciasPozo = j.filter(n => pozoExtra.includes(n));
-
-    htmlAnalisis +=
-      '<br><b>Números que forman el Pozo Extra:</b> ' + pozoExtra.join(' - ') +
-      '<br><b>Coincidencias con mi jugada:</b> ' + coincidenciasPozo.length +
-      (coincidenciasPozo.length
-        ? '<br><b>Números coincidentes:</b> ' + coincidenciasPozo.join(' - ')
-        : '<br><b>Números coincidentes:</b> ninguno');
-  }
-
-  htmlAnalisis +=
-    '<div style="margin-top:12px;padding-top:10px;border-top:1px solid #e2e5ec">' +
-    '<b>Aciertos acumulados en las 4 modalidades:</b> ' + totalAciertos +
-    '</div></div>';
-
-  box.innerHTML = htmlAnalisis;
-
-  if(!resultados.length){
-    return;
-  }
-
-  // Hipótesis experimental basada en la frecuencia observada.
-  // Pozo Extra no se suma nuevamente para evitar duplicar Tradicional y Revancha.
-  const frecuencia = {};
-  resultados.flat().forEach(n => {
-    frecuencia[n] = (frecuencia[n] || 0) + 1;
-  });
-
-  const candidatos = Object.keys(frecuencia)
-    .sort((a,b) => frecuencia[b] - frecuencia[a] || Number(a) - Number(b));
-
-  const seleccion = candidatos.slice(0,6);
-
-  while(seleccion.length < 6){
-    const n = String(Math.floor(Math.random()*46)).padStart(2,'0');
-    if(!seleccion.includes(n)) seleccion.push(n);
-  }
-
-  seleccion.sort((a,b)=>Number(a)-Number(b));
-
-  hypBox.classList.remove('hidden');
-  hypBox.innerHTML =
-    '<h3 style="margin-top:0">🧪 Hipótesis experimental para la próxima jugada</h3>' +
-    '<p><b>' + seleccion.join(' - ') + '</b></p>' +
-    '<p class="small muted">Esta combinación surge únicamente de la frecuencia observada en los resultados cargados. No implica que esos números tengan mayor probabilidad de salir.</p>' +
-    '<p class="small">Aciertos acumulados de la jugada actual en las 4 modalidades: <b>' + totalAciertos + '</b>.</p>';
-}
-</script>
 
 </body>
 </html>
