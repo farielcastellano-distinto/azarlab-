@@ -28,7 +28,8 @@ input,select{width:100%;padding:13px;border:1px solid #cfd4df;border-radius:11px
 footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
 .hidden{display:none!important}
 .small{font-size:14px}
-.lab-option{border:1px solid #e2e5ec;border-radius:13px;padding:14px;margin-top:10px}.lab-badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2f7;margin:2px}.lab-table{width:100%;border-collapse:collapse}.lab-table th,.lab-table td{text-align:left;padding:8px;border-bottom:1px solid #e2e5ec}</style>
+.lab-option{border:1px solid #e2e5ec;border-radius:13px;padding:14px;margin-top:10px}.lab-badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2f7;margin:2px}.lab-table{width:100%;border-collapse:collapse}.lab-table th,.lab-table td{text-align:left;padding:8px;border-bottom:1px solid #e2e5ec}footer a{color:var(--accent);font-weight:700;text-decoration:underline}
+</style>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4817392498788201"
      crossorigin="anonymous"></script>
 </head>
@@ -144,9 +145,59 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
   </div>
 </section>
 
+
+<section id="privacidad" class="panel">
+  <div class="card">
+    <h1>Política de privacidad</h1>
+    <p class="muted small">Última actualización: 2 de noviembre de 2026</p>
+
+    <h2>1. Quiénes somos</h2>
+    <p>AzarLab es una herramienta informativa y experimental para explorar resultados de juegos de azar, registrar jugadas y comparar hipótesis. AzarLab no recibe apuestas, no administra dinero ni vende participaciones.</p>
+
+    <h2>2. Información que se guarda en tu dispositivo</h2>
+    <p>Las jugadas que ingresás, los resultados que guardás y los análisis experimentales se almacenan localmente en el almacenamiento del navegador de tu dispositivo (localStorage). En la versión actual, AzarLab no requiere crear una cuenta ni enviar esos registros a un servidor propio.</p>
+    <p>Si borrás los datos del sitio desde tu navegador, podés perder esa información. También podés utilizar la opción de borrar la base del laboratorio disponible en la aplicación.</p>
+
+    <h2>3. Consulta de resultados</h2>
+    <p>Cuando utilizás la función de actualización automática, AzarLab consulta un servicio intermediario (Worker) para obtener resultados publicados por la fuente indicada en la aplicación. La consulta requiere una conexión a Internet. El proveedor de alojamiento y la infraestructura que intervienen en esa conexión pueden procesar datos técnicos de la solicitud, como la dirección IP, de acuerdo con sus propias políticas.</p>
+
+    <h2>4. Publicidad y cookies de Google</h2>
+    <p>AzarLab utiliza Google AdSense o puede utilizarlo cuando la publicidad esté habilitada. Google y otros proveedores externos pueden usar cookies, identificadores, direcciones IP o tecnologías similares para mostrar, medir y personalizar anuncios, según la configuración aplicable y la legislación correspondiente.</p>
+    <p>Google puede utilizar información sobre las visitas a este sitio y a otros sitios para ofrecer anuncios. Podés consultar <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">Cómo utiliza Google los datos cuando usás sitios o aplicaciones de sus socios</a>.</p>
+    <p>Podés administrar la personalización de anuncios desde <a href="https://adssettings.google.com/" target="_blank" rel="noopener noreferrer">Configuración de anuncios de Google</a>. También podés consultar opciones de exclusión en <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer">YourAdChoices</a>.</p>
+
+    <h2>5. Servicios de terceros</h2>
+    <p>El funcionamiento del sitio puede involucrar servicios de terceros, como Google AdSense, el proveedor de alojamiento del sitio y el servicio intermediario utilizado para consultar resultados. Esos proveedores pueden tratar información técnica conforme a sus propias políticas de privacidad y condiciones.</p>
+
+    <h2>6. Uso responsable</h2>
+    <p>Los datos y análisis de AzarLab tienen finalidad informativa y experimental. No constituyen predicciones, garantías de premios ni recomendaciones para apostar. Los resultados de sorteos dependen del azar.</p>
+
+    <h2>7. Seguridad y control de la información</h2>
+    <p>AzarLab no solicita datos personales para registrar jugadas en la versión actual. Como los registros del laboratorio se guardan en el navegador, el usuario controla su conservación desde ese dispositivo. No compartas información personal en campos destinados a números de jugadas.</p>
+
+    <h2>8. Derechos y consultas</h2>
+    <p>Para consultas relacionadas con esta política o con el tratamiento de datos personales, escribinos a <a href="mailto:farielcastellano@gmail.com">farielcastellano@gmail.com</a>. Los derechos de acceso, rectificación y supresión se rigen por la normativa aplicable, incluida la Ley 25.326 de la República Argentina.</p>
+    <p>Texto oficial: <a href="https://www.argentina.gob.ar/normativa/nacional/64790/actualizacion" target="_blank" rel="noopener noreferrer">Ley 25.326 — Protección de los Datos Personales</a>.</p>
+
+    <h2>9. Cambios en esta política</h2>
+    <p>Esta política puede actualizarse si cambian las funciones de AzarLab, los servicios utilizados o los requisitos legales y de las plataformas publicitarias. La fecha de actualización se indicará al comienzo de esta página.</p>
+
+    <div class="notice small">
+      AzarLab es un proyecto independiente de carácter informativo. No está afiliado ni representa a la organización que administra el Quini 6.
+    </div>
+    <div class="actions">
+      <button class="secondary" onclick="go('inicio')">← Volver al inicio</button>
+    </div>
+  </div>
+</section>
+
 </main>
 
-<footer>AzarLab · El laboratorio de los números<br>Sin apuestas ni manejo de dinero.</footer>
+<footer>
+  AzarLab · El laboratorio de los números<br>
+  Sin apuestas ni manejo de dinero.<br>
+  <a href="#" onclick="go('privacidad');return false;">Política de privacidad</a>
+</footer>
 
 <script>
 
