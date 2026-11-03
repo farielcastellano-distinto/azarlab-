@@ -146,6 +146,73 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
 </section>
 
 
+
+<section id="acerca" class="panel">
+  <div class="card">
+    <h1>Acerca de AzarLab</h1>
+    <p><strong>AzarLab — El laboratorio de los números</strong> es un proyecto independiente de carácter informativo y experimental. Su objetivo es ofrecer herramientas para registrar jugadas, observar resultados históricos y poner distintas hipótesis a prueba de manera ordenada.</p>
+    <p>La propuesta es aprender de los datos, comparar estrategias y documentar los resultados de cada experimento. AzarLab no promete acertar combinaciones ni anticipar resultados futuros.</p>
+    <h2>Qué podés hacer</h2>
+    <ul>
+      <li>Registrar una combinación de seis números.</li>
+      <li>Consultar y guardar resultados de las cuatro modalidades del Quini 6.</li>
+      <li>Comparar una jugada con resultados históricos.</li>
+      <li>Observar frecuencias, recencia, demoras y persistencia.</li>
+      <li>Generar hipótesis experimentales y compararlas con una combinación aleatoria de referencia.</li>
+    </ul>
+    <h2>Un proyecto independiente</h2>
+    <p>AzarLab no está afiliado, patrocinado ni representa a la organización que administra el Quini 6. Los nombres de juegos y modalidades se mencionan únicamente para identificar el objeto de análisis.</p>
+    <div class="notice small">AzarLab no recibe apuestas, no vende jugadas y no maneja dinero.</div>
+    <p>Contacto: <a href="mailto:farielcastellano@gmail.com">farielcastellano@gmail.com</a>.</p>
+    <div class="actions"><button class="secondary" onclick="go('inicio')">← Volver al inicio</button></div>
+  </div>
+</section>
+
+<section id="funcionamiento" class="panel">
+  <div class="card">
+    <h1>Cómo funciona AzarLab</h1>
+    <p>AzarLab organiza el análisis en etapas para que cada jugada y cada resultado puedan compararse de forma consistente.</p>
+    <h2>1. Registrar una jugada</h2>
+    <p>Ingresá seis números distintos entre 00 y 45. La aplicación valida la cantidad, el rango y que no haya números repetidos.</p>
+    <h2>2. Obtener resultados</h2>
+    <p>En el módulo Quini 6 podés incorporar resultados manualmente o consultar el último resultado disponible mediante la conexión automática. La consulta devuelve Tradicional, La Segunda, Revancha y Siempre Sale.</p>
+    <h2>3. Guardar el historial</h2>
+    <p>Los sorteos incorporados se guardan en el almacenamiento local del navegador. La aplicación utiliza ese historial para realizar sus comparaciones y análisis.</p>
+    <h2>4. Analizar y comparar</h2>
+    <p>El motor experimental calcula indicadores descriptivos sobre los resultados cargados y compara la jugada guardada con el último sorteo registrado en cada modalidad.</p>
+    <h2>5. Evaluar hipótesis</h2>
+    <p>AzarLab presenta alternativas para comparar: mantener la jugada anterior, utilizar una nueva hipótesis experimental o tomar una combinación aleatoria como referencia. El registro permite observar cómo se comportan esas alternativas a lo largo de distintos sorteos.</p>
+    <div class="notice small">Los resultados del análisis describen datos observados. No modifican las probabilidades matemáticas de un sorteo futuro.</div>
+    <p>Contacto: <a href="mailto:farielcastellano@gmail.com">farielcastellano@gmail.com</a>.</p>
+    <div class="actions"><button class="secondary" onclick="go('inicio')">← Volver al inicio</button></div>
+  </div>
+</section>
+
+<section id="metodologia" class="panel">
+  <div class="card">
+    <h1>Metodología experimental</h1>
+    <p>AzarLab utiliza indicadores descriptivos para estudiar combinaciones y comparar hipótesis. Los indicadores sirven para ordenar observaciones; no son predicciones ni probabilidades de que un número salga.</p>
+    <h2>Indicadores del motor actual</h2>
+    <ul>
+      <li><strong>Frecuencia histórica (35%):</strong> cantidad de apariciones de cada número en los resultados cargados.</li>
+      <li><strong>Recencia (25%):</strong> posición de la última aparición dentro del historial disponible.</li>
+      <li><strong>Comportamiento por modalidad (15%):</strong> distribución de apariciones entre Tradicional, La Segunda, Revancha y Siempre Sale.</li>
+      <li><strong>Ausencia o demora (15%):</strong> distancia observada desde la última aparición en el historial cargado.</li>
+      <li><strong>Persistencia reciente (10%):</strong> apariciones dentro de los últimos cinco sorteos completos incorporados.</li>
+    </ul>
+    <h2>Construcción de una hipótesis</h2>
+    <p>El motor ordena los números según el puntaje experimental y procura distribuir la selección entre distintas decenas y paridades. Si las restricciones no alcanzan para completar seis números, completa la combinación con los siguientes números mejor puntuados.</p>
+    <h2>Comparación de estrategias</h2>
+    <p>La aplicación permite contrastar tres enfoques: mantener la jugada anterior, utilizar la hipótesis generada por el motor y utilizar una combinación aleatoria de referencia. Para que la comparación tenga sentido, es importante conservar el registro de cada estrategia y evaluar sus resultados en sucesivos sorteos.</p>
+    <h2>Alcances y limitaciones</h2>
+    <p>Los sorteos son eventos aleatorios. La frecuencia pasada, la demora, la recencia y cualquier otro patrón descriptivo no garantizan ni implican una mayor probabilidad de aparición futura. Los puntajes de AzarLab son ponderaciones experimentales definidas para comparar métodos, no probabilidades matemáticas.</p>
+    <p>Los resultados dependen de la cantidad, exactitud y orden de los datos incorporados al historial. Una base pequeña o incompleta puede producir observaciones poco representativas.</p>
+    <div class="notice small">La finalidad de esta metodología es documentar, medir y comparar hipótesis, no recomendar apuestas ni prometer premios.</div>
+    <p>Contacto: <a href="mailto:farielcastellano@gmail.com">farielcastellano@gmail.com</a>.</p>
+    <div class="actions"><button class="secondary" onclick="go('inicio')">← Volver al inicio</button></div>
+  </div>
+</section>
+
 <section id="privacidad" class="panel">
   <div class="card">
     <h1>Política de privacidad</h1>
@@ -196,6 +263,9 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
 <footer>
   AzarLab · El laboratorio de los números<br>
   Sin apuestas ni manejo de dinero.<br>
+  <a href="#" onclick="go('acerca');return false;">Acerca de AzarLab</a> ·
+  <a href="#" onclick="go('funcionamiento');return false;">Cómo funciona</a> ·
+  <a href="#" onclick="go('metodologia');return false;">Metodología</a> ·
   <a href="#" onclick="go('privacidad');return false;">Política de privacidad</a>
 </footer>
 
