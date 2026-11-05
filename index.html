@@ -501,7 +501,7 @@ function labAnalyze(){
       '<p><strong>Aciertos en Pozo Extra:</strong> '+pozoExtraHits.length+
       (pozoExtraHits.length ? ' · Números: '+pozoExtraHits.join(' - ') : ' · Sin aciertos')+
       '</p>'+
-      '<p class="muted small">Para este cálculo se excluyen todos los números que salieron en Tradicional, La Segunda y Revancha. Los números de Siempre Sale no se excluyen del Pozo Extra.</p>'+
+      '<p class="muted small">Para este cálculo se utilizan los números que salieron en Tradicional, La Segunda y Revancha. Los números de Siempre Sale no se utilizan para calcular el Pozo Extra.</p>'+
       '</div>'+
       '<div class="notice small"><strong>Total observado en las cuatro modalidades: '+dayTotal+' coincidencia'+(dayTotal===1?'':'s')+'.</strong> Este dato corresponde únicamente a esta jugada y al último sorteo cargado.</div>';
     labShow('lab_dayAnalysis',dayHtml,true);
