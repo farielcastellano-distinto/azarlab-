@@ -114,11 +114,13 @@ footer{text-align:center;color:var(--muted);padding:30px 20px;font-size:13px}
     <div id="lab_drawMsg" class="result hidden"></div>
     <div id="lab_history" class="result"></div>
 
-    <h2 style="margin-top:24px">3. Analizar</h2>
+    <h2 style="margin-top:24px">3. Analizar jugada</h2>
     <p class="muted small">
-      Frecuencia histórica, recencia, comportamiento por modalidad, ausencia/demora y persistencia reciente.
+      Primero vas a ver el resultado de <strong>esta jugada contra el último sorteo cargado</strong>.
+      Después aparece el análisis histórico y experimental de la jugada.
     </p>
     <button class="primary" onclick="labAnalyze()">🔬 Analizar jugada guardada</button>
+    <div id="lab_dayAnalysis" class="result hidden"></div>
     <div id="lab_analysis" class="result hidden"></div>
 
     <h2 style="margin-top:24px">4. Próxima jugada</h2>
@@ -442,6 +444,7 @@ function labRenderHistory(){
 function labClearHistory(){
   if(!confirm('¿Borrar la base experimental local y sus pruebas?'))return;
   localStorage.removeItem(LAB_KEY);labRenderHistory();
+  document.getElementById('lab_dayAnalysis').classList.add('hidden');
   document.getElementById('lab_analysis').classList.add('hidden');
   document.getElementById('lab_options').textContent='Primero ejecutá el análisis.';
   document.getElementById('lab_audit').innerHTML='';
@@ -461,235 +464,42 @@ function labLoadDemo(){
 function labAnalyze(){
   try{
     const d=labDB();
-
-    // Primero usamos la última jugada guardada.
-    // Si no existe, intentamos leer lo que haya escrito en el campo.
     let play=null;
-    if(d.plays.length && Array.isArray(d.plays[0].nums)){
-      play=d.plays[0].nums;
-    }else{
-      play=labNums(document.getElementById('lab_play').value);
-    }
-
-    if(!play){
-      labShow('lab_analysis','Primero guardá una jugada válida con el botón "Guardar jugada".');
-      return;
-    }
-
-    if(!d.draws.length){
-      labShow('lab_analysis','La jugada está guardada, pero todavía no hay resultados históricos para analizar. Agregá al menos un sorteo.');
-      return;
-    }
-
+    if(d.plays.length && Array.isArray(d.plays[0].nums)) play=d.plays[0].nums;
+    else play=labNums(document.getElementById('lab_play').value);
+    if(!play){labShow('lab_dayAnalysis','Primero guardá una jugada válida con el botón "Guardar jugada".');return;}
+    if(!d.draws.length){labShow('lab_dayAnalysis','La jugada está guardada, pero todavía no hay resultados para comparar. Actualizá el último sorteo o agregá un sorteo.');return;}
     const modes=['Tradicional','La Segunda','Revancha','Siempre Sale'];
+    const validDraws=d.draws.filter(x=>x&&modes.every(m=>Array.isArray(x[m])&&x[m].length===6));
+    if(!validDraws.length){labShow('lab_dayAnalysis','Hay resultados guardados, pero no encontré un sorteo completo para comparar.');return;}
+    const latestDraw=[...validDraws].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];
+    const hitNumbersByMode={},hitsByMode={};
+    modes.forEach(m=>{const r=latestDraw[m].map(x=>String(x).padStart(2,'0'));const hits=play.filter(n=>r.includes(String(n).padStart(2,'0')));hitNumbersByMode[m]=hits;hitsByMode[m]=hits.length;});
+    const dayTotal=Object.values(hitsByMode).reduce((a,b)=>a+b,0);
+    const dayDate=latestDraw.date?String(latestDraw.date).split('-').reverse().join('/'):'Fecha no informada';
+    let dayHtml='<h3>🎯 Resultado de la jugada del día</h3><p><strong>Tu jugada:</strong> <span class="nums">'+labFmt(play)+'</span></p><p><strong>Último sorteo cargado:</strong> '+dayDate+(latestDraw.drawNumber?' · Sorteo Nº '+latestDraw.drawNumber:'')+'</p><div class="grid">';
+    modes.forEach(m=>{const hits=hitsByMode[m];const matched=hitNumbersByMode[m];dayHtml+='<div class="metric"><span>'+m+'</span><b>'+hits+' '+(hits===1?'acierto':'aciertos')+'</b><span class="muted small">'+(matched.length?'Números: '+matched.join(' - '):'Sin aciertos')+'</span></div>';});
+    dayHtml+='</div><div class="notice small"><strong>Total observado en las cuatro modalidades: '+dayTotal+' coincidencia'+(dayTotal===1?'':'s')+'.</strong> Este dato corresponde únicamente a esta jugada y al último sorteo cargado.</div>';
+    labShow('lab_dayAnalysis',dayHtml,true);
 
-    // Limpiamos registros incompletos para que un dato viejo no rompa el análisis.
-    const validDraws=d.draws.filter(x =>
-      x &&
-      modes.every(m=>Array.isArray(x[m]) && x[m].length===6)
-    );
-
-    if(!validDraws.length){
-      labShow('lab_analysis','Hay jugadas guardadas, pero no encontré sorteos completos para analizar.');
-      return;
-    }
-
-    const all=validDraws.flatMap(x =>
-      modes.map(m=>({mode:m,nums:x[m],date:x.date}))
-    );
-    const total=all.length;
-
-    const stats={};
-    for(let n=0;n<46;n++){
-      const key=String(n).padStart(2,'0');
-      stats[key]={
-        freq:0,
-        mode:{'Tradicional':0,'La Segunda':0,'Revancha':0,'Siempre Sale':0},
-        lastDraw:Infinity,
-        recent:0
-      };
-    }
-
-    all.forEach((r,i)=>{
-      const drawIndex=Math.floor(i/modes.length);
-      r.nums.forEach(n=>{
-        const key=String(n).padStart(2,'0');
-        if(!stats[key])return;
-        const st=stats[key];
-        st.freq++;
-        st.mode[r.mode]++;
-        st.lastDraw=Math.min(st.lastDraw,drawIndex);
-
-        // Últimos 5 sorteos completos = 20 resultados de modalidad.
-        if(i>=Math.max(0,total-20))st.recent++;
-      });
-    });
-
-    const statValues=Object.values(stats);
-    const maxFreq=Math.max(...statValues.map(st=>st.freq),1);
-    const maxRecent=Math.max(...statValues.map(st=>st.recent),1);
-
-    Object.entries(stats).forEach(([n,st])=>{
-      st.frequencyScore=st.freq/maxFreq;
-
-      // 0 = no apareció; 1 = apareció en el sorteo más reciente.
-      st.recencyScore=st.lastDraw===Infinity
-        ? 0
-        : 1-(st.lastDraw/Math.max(validDraws.length-1,1));
-
-      // Cantidad de sorteos desde la última aparición.
-      st.delay=st.lastDraw===Infinity
-        ? validDraws.length
-        : st.lastDraw;
-
-      const maxDelay=Math.max(validDraws.length,1);
-      st.delayScore=st.delay/maxDelay;
-
-      st.persistenceScore=st.recent/maxRecent;
-
-      const modeValues=Object.values(st.mode);
-      const modeMax=Math.max(...modeValues,0);
-      const modeTotal=modeValues.reduce((a,b)=>a+b,0);
-
-      st.modalityScore=modeTotal
-        ? modeMax/modeTotal
-        : 0;
-
-      st.score=
-        .35*st.frequencyScore+
-        .25*st.recencyScore+
-        .15*st.modalityScore+
-        .15*st.delayScore+
-        .10*st.persistenceScore;
-    });
-
-    const hitsByMode={};
-    modes.forEach(m=>{
-      const latest=validDraws[0][m];
-      hitsByMode[m]=latest
-        ? play.filter(n=>latest.map(String).map(x=>x.padStart(2,'0')).includes(String(n).padStart(2,'0'))).length
-        : 0;
-    });
-
-    const ranked=Object.entries(stats)
-      .sort((a,b)=>b[1].score-a[1].score || Number(a[0])-Number(b[0]));
-
-    const selected=[];
-
-    // Primero respetamos diversidad estructural.
-    for(const [n] of ranked){
-      if(selected.length>=6)break;
-
-      const decade=Math.floor(Number(n)/10);
-      const parity=Number(n)%2;
-
-      const sameDecade=selected.filter(x=>Math.floor(Number(x)/10)===decade).length;
-      const sameParity=selected.filter(x=>Number(x)%2===parity).length;
-
-      if(sameDecade>=2)continue;
-      if(sameParity>=4)continue;
-
-      selected.push(n);
-    }
-
-    // Si las restricciones no permiten completar 6, completamos con los mejores.
-    for(const [n] of ranked){
-      if(selected.length>=6)break;
-      if(!selected.includes(n))selected.push(n);
-    }
-
-    selected.sort((a,b)=>Number(a)-Number(b));
-
-    const sum=play.reduce((a,n)=>a+Number(n),0);
-    const evens=play.filter(n=>Number(n)%2===0).length;
-    const top=ranked.slice(0,10);
-
-    let h=
-      '<h3>📊 Lectura de la jugada guardada</h3>'+
-      '<p class="nums">'+labFmt(play)+'</p>'+
-      '<div class="grid">'+
-      '<div class="metric">Suma<b>'+sum+'</b></div>'+
-      '<div class="metric">Pares / impares<b>'+evens+' / '+(6-evens)+'</b></div>'+
-      '<div class="metric">Sorteos analizados<b>'+validDraws.length+'</b></div>'+
-      '<div class="metric">Resultados por modalidad<b>'+total+'</b></div>'+
-      '</div>'+
-      '<div class="result"><b>Último sorteo cargado — aciertos de esta jugada</b><br>'+
-      modes.map(m=>'<span class="badge">'+m+': '+hitsByMode[m]+'</span>').join('')+
-      '</div>'+
-      '<div class="result"><b>Componentes del motor experimental</b><ul>'+
-      '<li>35% frecuencia histórica</li>'+
-      '<li>25% recencia</li>'+
-      '<li>15% comportamiento por modalidad</li>'+
-      '<li>15% ausencia/demora</li>'+
-      '<li>10% persistencia reciente</li>'+
-      '</ul>'+
-      '<span class="muted small">Son ponderaciones experimentales para comparar estrategias; no representan probabilidades matemáticas de salida.</span></div>'+
-      '<div class="result"><b>🔎 Números con mayor puntaje experimental</b>'+
-      '<div style="overflow:auto;margin-top:8px"><table>'+
-      '<tr><th>Número</th><th>Puntaje</th><th>Frecuencia</th><th>Demora</th><th>Persistencia</th></tr>'+
-      top.map(([n,st])=>
-        '<tr><td><b>'+n+'</b></td>'+
-        '<td>'+st.score.toFixed(3)+'</td>'+
-        '<td>'+st.freq+'</td>'+
-        '<td>'+st.delay+'</td>'+
-        '<td>'+st.recent+'</td></tr>'
-      ).join('')+
-      '</table></div></div>';
-
+    const all=validDraws.flatMap(x=>modes.map(m=>({mode:m,nums:x[m],date:x.date})));
+    const total=all.length; const stats={};
+    for(let n=0;n<46;n++){const key=String(n).padStart(2,'0');stats[key]={freq:0,mode:{'Tradicional':0,'La Segunda':0,'Revancha':0,'Siempre Sale':0},lastDraw:Infinity,recent:0};}
+    all.forEach((r,i)=>{const drawIndex=Math.floor(i/modes.length);r.nums.forEach(n=>{const key=String(n).padStart(2,'0');if(!stats[key])return;const st=stats[key];st.freq++;st.mode[r.mode]++;st.lastDraw=Math.min(st.lastDraw,drawIndex);if(i>=Math.max(0,total-20))st.recent++;});});
+    const statValues=Object.values(stats),maxFreq=Math.max(...statValues.map(st=>st.freq),1),maxRecent=Math.max(...statValues.map(st=>st.recent),1);
+    Object.entries(stats).forEach(([n,st])=>{st.frequencyScore=st.freq/maxFreq;st.recencyScore=st.lastDraw===Infinity?0:1-(st.lastDraw/Math.max(validDraws.length-1,1));st.delay=st.lastDraw===Infinity?validDraws.length:st.lastDraw;st.delayScore=st.delay/Math.max(validDraws.length,1);st.persistenceScore=st.recent/maxRecent;const mv=Object.values(st.mode),mm=Math.max(...mv,0),mt=mv.reduce((a,b)=>a+b,0);st.modalityScore=mt?mm/mt:0;st.score=.35*st.frequencyScore+.25*st.recencyScore+.15*st.modalityScore+.15*st.delayScore+.10*st.persistenceScore;});
+    const ranked=Object.entries(stats).sort((a,b)=>b[1].score-a[1].score||Number(a[0])-Number(b[0]));const selected=[];
+    for(const [n] of ranked){if(selected.length>=6)break;const decade=Math.floor(Number(n)/10),parity=Number(n)%2,sameDecade=selected.filter(x=>Math.floor(Number(x)/10)===decade).length,sameParity=selected.filter(x=>Number(x)%2===parity).length;if(sameDecade>=2||sameParity>=4)continue;selected.push(n);}
+    for(const [n] of ranked){if(selected.length>=6)break;if(!selected.includes(n))selected.push(n);} selected.sort((a,b)=>Number(a)-Number(b));
+    const sum=play.reduce((a,n)=>a+Number(n),0),evens=play.filter(n=>Number(n)%2===0).length,top=ranked.slice(0,10);
+    let h='<h3>📊 Análisis histórico de la jugada</h3><p class="nums">'+labFmt(play)+'</p><div class="grid"><div class="metric">Suma<b>'+sum+'</b></div><div class="metric">Pares / impares<b>'+evens+' / '+(6-evens)+'</b></div><div class="metric">Sorteos analizados<b>'+validDraws.length+'</b></div><div class="metric">Resultados por modalidad<b>'+total+'</b></div></div><div class="result"><b>Qué analiza esta parte</b><br>Frecuencia histórica, recencia, comportamiento por modalidad, ausencia/demora y persistencia reciente.</div><div class="result"><b>Componentes del motor experimental</b><ul><li>35% frecuencia histórica</li><li>25% recencia</li><li>15% comportamiento por modalidad</li><li>15% ausencia/demora</li><li>10% persistencia reciente</li></ul><span class="muted small">Son ponderaciones experimentales para comparar estrategias; no representan probabilidades matemáticas de salida.</span></div><div class="result"><b>🔎 Números con mayor puntaje experimental</b><div style="overflow:auto;margin-top:8px"><table><tr><th>Número</th><th>Puntaje</th><th>Frecuencia</th><th>Demora</th><th>Persistencia</th></tr>'+top.map(([n,st])=>'<tr><td><b>'+n+'</b></td><td>'+st.score.toFixed(3)+'</td><td>'+st.freq+'</td><td>'+st.delay+'</td><td>'+st.recent+'</td></tr>').join('')+'</table></div></div>';
     labShow('lab_analysis',h,true);
-
-    const random=[];
-    while(random.length<6){
-      const n=String(Math.floor(Math.random()*46)).padStart(2,'0');
-      if(!random.includes(n))random.push(n);
-    }
-    random.sort((a,b)=>Number(a)-Number(b));
-
-    const currentScore=
-      play.reduce((a,n)=>a+(stats[String(n).padStart(2,'0')]?.score||0),0)/6;
-
-    const hypothesisScore=
-      selected.reduce((a,n)=>a+(stats[n]?.score||0),0)/6;
-
-    document.getElementById('lab_options').innerHTML=
-      '<div class="option"><h4>🔄 A. Mantener la jugada anterior</h4>'+
-      '<p>'+labFmt(play)+'</p>'+
-      '<span class="muted small">Sirve para medir qué ocurre cuando no cambiamos la combinación.</span></div>'+
-
-      '<div class="option"><h4>🧪 B. Nueva hipótesis de AzarLab</h4>'+
-      '<p class="nums">'+labFmt(selected)+'</p>'+
-      '<p class="muted small">Construida con el motor experimental y criterios de diversidad estructural.</p></div>'+
-
-      '<div class="option"><h4>🎲 C. Jugada aleatoria de referencia</h4>'+
-      '<p class="nums">'+labFmt(random)+'</p>'+
-      '<p class="muted small">Funciona como referencia experimental para comparar contra las otras dos estrategias.</p></div>'+
-
-      '<div class="result"><b>Indicador experimental</b><br>'+
-      'Promedio de puntaje de la jugada actual: '+currentScore.toFixed(3)+
-      '<br>Promedio de puntaje de la hipótesis: '+hypothesisScore.toFixed(3)+
-      '<br><span class="muted small">Estos puntajes pertenecen al modelo, no son una medida de probabilidad de ganar.</span></div>';
-
-    d.tests.unshift({
-      id:uid(),
-      date:new Date().toISOString(),
-      play:[...play],
-      keep:[...play],
-      hypothesis:[...selected],
-      random:[...random],
-      currentScore:Number(currentScore.toFixed(4)),
-      hypothesisScore:Number(hypothesisScore.toFixed(4))
-    });
-
-    saveLabDB(d);
-    labRenderAudit();
-
-  }catch(err){
-    console.error(err);
-    labShow(
-      'lab_analysis',
-      'El análisis encontró un problema con algún dato guardado. La jugada y los resultados siguen guardados. Detalle técnico: '+err.message
-    );
-  }
+    const random=[];while(random.length<6){const n=String(Math.floor(Math.random()*46)).padStart(2,'0');if(!random.includes(n))random.push(n);}random.sort((a,b)=>Number(a)-Number(b));
+    const currentScore=play.reduce((a,n)=>a+(stats[String(n).padStart(2,'0')]?.score||0),0)/6,hypothesisScore=selected.reduce((a,n)=>a+(stats[n]?.score||0),0)/6;
+    document.getElementById('lab_options').innerHTML='<div class="option"><h4>🔄 A. Mantener la jugada anterior</h4><p>'+labFmt(play)+'</p><span class="muted small">Sirve para medir qué ocurre cuando no cambiamos la combinación.</span></div><div class="option"><h4>🧪 B. Nueva hipótesis de AzarLab</h4><p class="nums">'+labFmt(selected)+'</p><p class="muted small">Construida con el motor experimental y criterios de diversidad estructural.</p></div><div class="option"><h4>🎲 C. Jugada aleatoria de referencia</h4><p class="nums">'+labFmt(random)+'</p><p class="muted small">Funciona como referencia experimental para comparar contra las otras dos estrategias.</p></div><div class="result"><b>Indicador experimental</b><br>Promedio de puntaje de la jugada actual: '+currentScore.toFixed(3)+'<br>Promedio de puntaje de la hipótesis: '+hypothesisScore.toFixed(3)+'<br><span class="muted small">Estos puntajes pertenecen al modelo, no son una medida de probabilidad de ganar.</span></div>';
+    d.tests.unshift({id:uid(),date:new Date().toISOString(),play:[...play],keep:[...play],hypothesis:[...selected],random:[...random],currentScore:Number(currentScore.toFixed(4)),hypothesisScore:Number(hypothesisScore.toFixed(4)),latestDrawDate:latestDraw.date||null,latestDrawNumber:latestDraw.drawNumber||null,hitsByMode:{...hitsByMode},hitNumbersByMode:{...hitNumbersByMode}});
+    saveLabDB(d);labRenderAudit();
+  }catch(err){console.error(err);labShow('lab_dayAnalysis','El análisis encontró un problema con algún dato guardado. La jugada y los resultados siguen guardados. Detalle técnico: '+err.message);}
 }
 function labRenderAudit(){
   const d=labDB(),box=document.getElementById('lab_audit');
