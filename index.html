@@ -475,11 +475,34 @@ function labAnalyze(){
     const latestDraw=[...validDraws].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];
     const hitNumbersByMode={},hitsByMode={};
     modes.forEach(m=>{const r=latestDraw[m].map(x=>String(x).padStart(2,'0'));const hits=play.filter(n=>r.includes(String(n).padStart(2,'0')));hitNumbersByMode[m]=hits;hitsByMode[m]=hits.length;});
+
+    // Pozo Extra: se consideran disponibles los números que NO aparecieron
+    // en Tradicional, La Segunda ni Revancha. Siempre Sale no participa.
+    const extraBase = [
+      ...latestDraw['Tradicional'],
+      ...latestDraw['La Segunda'],
+      ...latestDraw['Revancha']
+    ].map(x=>String(x).padStart(2,'0'));
+
+    const extraExcluded = new Set(extraBase);
+    const pozoExtraNumbers = Array.from({length:46},(_,i)=>String(i).padStart(2,'0'))
+      .filter(n=>!extraExcluded.has(n));
+
+    const pozoExtraHits = play.filter(n=>pozoExtraNumbers.includes(String(n).padStart(2,'0')));
     const dayTotal=Object.values(hitsByMode).reduce((a,b)=>a+b,0);
     const dayDate=latestDraw.date?String(latestDraw.date).split('-').reverse().join('/'):'Fecha no informada';
     let dayHtml='<h3>🎯 Resultado de la jugada del día</h3><p><strong>Tu jugada:</strong> <span class="nums">'+labFmt(play)+'</span></p><p><strong>Último sorteo cargado:</strong> '+dayDate+(latestDraw.drawNumber?' · Sorteo Nº '+latestDraw.drawNumber:'')+'</p><div class="grid">';
     modes.forEach(m=>{const hits=hitsByMode[m];const matched=hitNumbersByMode[m];dayHtml+='<div class="metric"><span>'+m+'</span><b>'+hits+' '+(hits===1?'acierto':'aciertos')+'</b><span class="muted small">'+(matched.length?'Números: '+matched.join(' - '):'Sin aciertos')+'</span></div>';});
-    dayHtml+='</div><div class="notice small"><strong>Total observado en las cuatro modalidades: '+dayTotal+' coincidencia'+(dayTotal===1?'':'s')+'.</strong> Este dato corresponde únicamente a esta jugada y al último sorteo cargado.</div>';
+    dayHtml+='</div>'+
+      '<div class="result">'+
+      '<h4>💰 Pozo Extra</h4>'+
+      '<p><strong>Tu jugada:</strong> '+labFmt(play)+'</p>'+
+      '<p><strong>Aciertos en Pozo Extra:</strong> '+pozoExtraHits.length+
+      (pozoExtraHits.length ? ' · Números: '+pozoExtraHits.join(' - ') : ' · Sin aciertos')+
+      '</p>'+
+      '<p class="muted small">Para este cálculo se excluyen todos los números que salieron en Tradicional, La Segunda y Revancha. Los números de Siempre Sale no se excluyen del Pozo Extra.</p>'+
+      '</div>'+
+      '<div class="notice small"><strong>Total observado en las cuatro modalidades: '+dayTotal+' coincidencia'+(dayTotal===1?'':'s')+'.</strong> Este dato corresponde únicamente a esta jugada y al último sorteo cargado.</div>';
     labShow('lab_dayAnalysis',dayHtml,true);
 
     const all=validDraws.flatMap(x=>modes.map(m=>({mode:m,nums:x[m],date:x.date})));
@@ -497,7 +520,7 @@ function labAnalyze(){
     const random=[];while(random.length<6){const n=String(Math.floor(Math.random()*46)).padStart(2,'0');if(!random.includes(n))random.push(n);}random.sort((a,b)=>Number(a)-Number(b));
     const currentScore=play.reduce((a,n)=>a+(stats[String(n).padStart(2,'0')]?.score||0),0)/6,hypothesisScore=selected.reduce((a,n)=>a+(stats[n]?.score||0),0)/6;
     document.getElementById('lab_options').innerHTML='<div class="option"><h4>🔄 A. Mantener la jugada anterior</h4><p>'+labFmt(play)+'</p><span class="muted small">Sirve para medir qué ocurre cuando no cambiamos la combinación.</span></div><div class="option"><h4>🧪 B. Nueva hipótesis de AzarLab</h4><p class="nums">'+labFmt(selected)+'</p><p class="muted small">Construida con el motor experimental y criterios de diversidad estructural.</p></div><div class="option"><h4>🎲 C. Jugada aleatoria de referencia</h4><p class="nums">'+labFmt(random)+'</p><p class="muted small">Funciona como referencia experimental para comparar contra las otras dos estrategias.</p></div><div class="result"><b>Indicador experimental</b><br>Promedio de puntaje de la jugada actual: '+currentScore.toFixed(3)+'<br>Promedio de puntaje de la hipótesis: '+hypothesisScore.toFixed(3)+'<br><span class="muted small">Estos puntajes pertenecen al modelo, no son una medida de probabilidad de ganar.</span></div>';
-    d.tests.unshift({id:uid(),date:new Date().toISOString(),play:[...play],keep:[...play],hypothesis:[...selected],random:[...random],currentScore:Number(currentScore.toFixed(4)),hypothesisScore:Number(hypothesisScore.toFixed(4)),latestDrawDate:latestDraw.date||null,latestDrawNumber:latestDraw.drawNumber||null,hitsByMode:{...hitsByMode},hitNumbersByMode:{...hitNumbersByMode}});
+    d.tests.unshift({id:uid(),date:new Date().toISOString(),play:[...play],keep:[...play],hypothesis:[...selected],random:[...random],currentScore:Number(currentScore.toFixed(4)),hypothesisScore:Number(hypothesisScore.toFixed(4)),latestDrawDate:latestDraw.date||null,latestDrawNumber:latestDraw.drawNumber||null,hitsByMode:{...hitsByMode},hitNumbersByMode:{...hitNumbersByMode},pozoExtraHits:[...pozoExtraHits],pozoExtraAvailable:[...pozoExtraNumbers]});
     saveLabDB(d);labRenderAudit();
   }catch(err){console.error(err);labShow('lab_dayAnalysis','El análisis encontró un problema con algún dato guardado. La jugada y los resultados siguen guardados. Detalle técnico: '+err.message);}
 }
