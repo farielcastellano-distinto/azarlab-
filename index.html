@@ -484,9 +484,10 @@ function labAnalyze(){
       ...latestDraw['Revancha']
     ].map(x=>String(x).padStart(2,'0'));
 
-    const extraExcluded = new Set(extraBase);
-    const pozoExtraNumbers = Array.from({length:46},(_,i)=>String(i).padStart(2,'0'))
-      .filter(n=>!extraExcluded.has(n));
+    // Pozo Extra: se toman únicamente los 18 números de
+    // Tradicional + La Segunda + Revancha. Siempre Sale no participa.
+    // Si un número se repite entre esos sorteos, cuenta una sola vez.
+    const pozoExtraNumbers = [...new Set(extraBase)];
 
     const pozoExtraHits = play.filter(n=>pozoExtraNumbers.includes(String(n).padStart(2,'0')));
     const dayTotal=Object.values(hitsByMode).reduce((a,b)=>a+b,0);
